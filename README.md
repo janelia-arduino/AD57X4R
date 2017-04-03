@@ -1,4 +1,4 @@
-#AD57X4R
+# AD57X4R
 
 Authors:
 
@@ -14,7 +14,7 @@ Provides an SPI based interface to the AD57X4R Complete, Quad,
 [Usage Examples](./examples)
 
 
-##Wiring
+## Wiring
 
     GND----| AVss          AVdd |--Vdd
     X------| NC           VoutC |--VoutC
@@ -37,6 +37,6 @@ Provides an SPI based interface to the AD57X4R Complete, Quad,
 
     +5V--||(0.1uF)--GND
 
-##Install Library Dependencies
+## Install Library Dependencies
 
 [arduino-libraries](https://github.com/janelia-arduino/arduino-libraries)
