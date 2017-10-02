@@ -1,13 +1,13 @@
-#include "Arduino.h"
-#include "Streaming.h"
-#include "SPI.h"
-#include "TimeTriggeredScheduler.h"
-#include "BetterMap.h"
-#include "AD57X4R.h"
+#include <Arduino.h>
+#include <Streaming.h>
+#include <SPI.h>
+#include <TimeTriggeredScheduler.h>
+#include <BetterMap.h>
+#include <AD57X4R.h>
 
 
 const int DAC_CS = 49;
-const int BAUDRATE = 9600;
+const long BAUDRATE = 115200;
 const unsigned int MILLIVOLT_MAX = 10000;
 const int PWM_PIN = 48;
 

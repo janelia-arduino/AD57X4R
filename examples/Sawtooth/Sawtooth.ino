@@ -1,11 +1,12 @@
-#include "Arduino.h"
-#include "SPI.h"
-#include "AD57X4R.h"
-#include "Streaming.h"
+#include <Arduino.h>
+#include <SPI.h>
+#include <AD57X4R.h>
+#include <Streaming.h>
+
 
 const int LOOP_DELAY = 10;
 const int DAC_CS = 49;
-const int BAUDRATE = 9600;
+const long BAUDRATE = 115200;
 
 const int VALUE_INC = 100;
 

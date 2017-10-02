@@ -10,13 +10,9 @@
 // ----------------------------------------------------------------------------
 #ifndef AD57X4R_H
 #define AD57X4R_H
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
-#include "SPI.h"
-#include "Streaming.h"
+#include <Arduino.h>
+#include <SPI.h>
+#include <Streaming.h>
 
 
 class AD57X4R
