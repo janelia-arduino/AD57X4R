@@ -6,7 +6,7 @@
 
 
 const int DAC_CS = 49;
-const long BAUDRATE = 115200;
+const long BAUD = 115200;
 const unsigned int MILLIVOLT_MAX = 5000;
 
 AD57X4R dac = AD57X4R(DAC_CS);
@@ -45,7 +45,7 @@ void parse(char *line, char **argv, uint8_t max_args)
 void setup()
 {
   // PC communications
-  Serial.begin(BAUDRATE);
+  Serial.begin(BAUD);
   Serial.println("* System ready *");
 
   // Initialize DAC

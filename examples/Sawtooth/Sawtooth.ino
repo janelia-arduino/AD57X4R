@@ -6,7 +6,7 @@
 
 const int LOOP_DELAY = 10;
 const int DAC_CS = 49;
-const long BAUDRATE = 115200;
+const long BAUD = 115200;
 
 const int VALUE_INC = 100;
 
@@ -17,7 +17,7 @@ unsigned int value = 0;
 void setup()
 {
   // Setup serial communications
-  Serial.begin(BAUDRATE);
+  Serial.begin(BAUD);
 
   // Initialize DAC
   dac.init(AD57X4R::AD5754R, AD57X4R::UNIPOLAR_5V, AD57X4R::ALL);

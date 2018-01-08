@@ -7,7 +7,7 @@
 
 
 const int DAC_CS = 49;
-const long BAUDRATE = 115200;
+const long BAUD = 115200;
 const unsigned int MILLIVOLT_MAX = 10000;
 const int PWM_PIN = 48;
 
@@ -47,7 +47,7 @@ void parse(char *line, char **argv, uint8_t maxArgs)
 
 void setup() {
   // PC communications
-  Serial.begin(BAUDRATE);
+  Serial.begin(BAUD);
   Serial.println("* System ready *");
 
   // Initialize DAC
