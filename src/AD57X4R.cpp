@@ -11,63 +11,97 @@
 #include "AD57X4R.h"
 
 
-// Read/Write Bit
-#define READ                 1
-#define WRITE                0
-#define READ_WRITE_BIT_SHIFT 7
-#define READ_WRITE_BIT_COUNT 1
-
-// Register Select Bits
-#define REGISTER_SELECT_DAC                 0b000
-#define REGISTER_SELECT_OUTPUT_RANGE_SELECT 0b001
-#define REGISTER_SELECT_POWER_CONTROL       0b010
-#define REGISTER_SELECT_CONTROL             0b011
-#define REGISTER_SELECT_BIT_SHIFT           3
-#define REGISTER_SELECT_BIT_COUNT           3
-
-// DAC Address Bits
-#define DAC_ADDRESS_A         0b000
-#define DAC_ADDRESS_B         0b001
-#define DAC_ADDRESS_C         0b010
-#define DAC_ADDRESS_D         0b011
-#define DAC_ADDRESS_ALL       0b100
-#define DAC_ADDRESS_BIT_SHIFT 0
-#define DAC_ADDRESS_BIT_COUNT 3
-
-// Output Ranges
-#define OUTPUT_RANGE_UNIPOLAR_5V  0b000
-#define OUTPUT_RANGE_UNIPOLAR_10V 0b001
-#define OUTPUT_RANGE_BIPOLAR_5V   0b011
-#define OUTPUT_RANGE_BIPOLAR_10V  0b100
-
 AD57X4R::AD57X4R()
 {
 }
 
-AD57X4R::AD57X4R(int cs_pin)
+AD57X4R::AD57X4R(const int cs_pin)
 {
   setupCS(cs_pin);
   output_.header = 0;
 }
 
-void AD57X4R::spiBegin()
+void AD57X4R::init(const resolutions resolution, const output_ranges output_range)
 {
-  SPI.setDataMode(SPI_MODE2);
-  SPI.setBitOrder(MSBFIRST);
-  SPI.setClockDivider(SPI_CLOCK_DIV2);
   SPI.begin();
-}
-
-void AD57X4R::init(resolutions resolution, output_ranges output_range, boolean spi_reset)
-{
-  spiBegin();
   resolution_ = resolution;
   setOutputRange(output_range, ALL);
   setPowerControlRegister(ALL);
-  spi_reset_ = spi_reset;
 }
 
-void AD57X4R::setupCS(int cs_pin)
+int AD57X4R::readPowerControlRegister()
+{
+  int return_data;
+  setReadWrite(READ);
+  setRegisterSelect(REGISTER_SELECT_POWER_CONTROL);
+  setDACAddress(A);
+  sendOutput();
+  return_data = readInput();
+  return return_data;
+}
+
+void AD57X4R::analogWrite(const channels channel, const unsigned int value)
+{
+  setReadWrite(WRITE);
+  setRegisterSelect(REGISTER_SELECT_DAC);
+  setDACAddress(channel);
+  setData(value);
+  sendOutput();
+  load();
+}
+
+void AD57X4R::analogWrite(const channels channel, const int value)
+{
+  setReadWrite(WRITE);
+  setRegisterSelect(REGISTER_SELECT_DAC);
+  setDACAddress(channel);
+  setData(value);
+  sendOutput();
+  load();
+}
+
+void AD57X4R::analogWrite(const int pin, const unsigned int value)
+{
+  channels channel = pinToChannel(pin);
+  analogWrite(channel, value);
+}
+
+void AD57X4R::analogWrite(const int pin, const int value)
+{
+  channels channel = pinToChannel(pin);
+  analogWrite(channel, value);
+}
+
+unsigned int AD57X4R::getMaxDacValue()
+{
+  unsigned int max_dac_value = 65535;
+  switch (resolution_)
+  {
+    case AD5724R:
+      max_dac_value = 4095;
+      break;
+    case AD5734R:
+      max_dac_value = 16383;
+      break;
+    case AD5754R:
+      max_dac_value = 65535;
+      break;
+  }
+  return max_dac_value;
+}
+
+void AD57X4R::setCSInvert()
+{
+  cs_invert_flag_ = true;
+}
+
+void AD57X4R::setCSNormal()
+{
+  cs_invert_flag_ = false;
+}
+
+// private
+void AD57X4R::setupCS(const int cs_pin)
 {
   cs_invert_flag_ = false;
   pinMode(cs_pin,OUTPUT);
@@ -75,7 +109,41 @@ void AD57X4R::setupCS(int cs_pin)
   cs_pin_ = cs_pin;
 }
 
-void AD57X4R::setHeader(byte value, byte bit_shift, byte bit_count)
+void AD57X4R::spiBeginTransaction()
+{
+  SPI.beginTransaction(SPISettings(SPI_CLOCK,SPI_BIT_ORDER,SPI_MODE));
+  csEnable();
+}
+
+void AD57X4R::spiEndTransaction()
+{
+  csDisable();
+  SPI.endTransaction();
+}
+
+AD57X4R::channels AD57X4R::pinToChannel(const int pin)
+{
+  channels channel = ALL;
+  // Unnecessary and way too much code, but very explicit
+  switch (pin)
+  {
+    case 0:
+      channel = A;
+      break;
+    case 1:
+      channel = B;
+      break;
+    case 2:
+      channel = C;
+      break;
+    case 3:
+      channel = D;
+      break;
+  }
+  return channel;
+}
+
+void AD57X4R::setHeader(const byte value, const byte bit_shift, const byte bit_count)
 {
   byte bit_mask = 0;
   for (byte bit=0; bit<bit_count; bit++)
@@ -84,24 +152,23 @@ void AD57X4R::setHeader(byte value, byte bit_shift, byte bit_count)
   }
   byte header = output_.header;
   header &= ~bit_mask;
-  value = value << bit_shift;
-  header |= value;
+  header |= value << bit_shift;
   output_.header = header;
 }
 
-void AD57X4R::setReadWrite(byte value)
+void AD57X4R::setReadWrite(const byte value)
 {
   setHeader(value,READ_WRITE_BIT_SHIFT,READ_WRITE_BIT_COUNT);
 }
 
-void AD57X4R::setRegisterSelect(byte value)
+void AD57X4R::setRegisterSelect(const byte value)
 {
   setHeader(value,REGISTER_SELECT_BIT_SHIFT,REGISTER_SELECT_BIT_COUNT);
 }
 
-void AD57X4R::setDACAddress(channels channel)
+void AD57X4R::setDACAddress(const channels channel)
 {
-  byte value;
+  byte value = DAC_ADDRESS_ALL;
   switch (channel)
   {
     case A:
@@ -120,12 +187,107 @@ void AD57X4R::setDACAddress(channels channel)
       value = DAC_ADDRESS_ALL;
       break;
   }
-  setHeader(value,DAC_ADDRESS_BIT_SHIFT,DAC_ADDRESS_BIT_COUNT);
+  setHeader(value,ADDRESS_BIT_SHIFT,ADDRESS_BIT_COUNT);
+}
+
+void AD57X4R::setControlAddress(const uint8_t address)
+{
+  setHeader(address,ADDRESS_BIT_SHIFT,ADDRESS_BIT_COUNT);
 }
 
 void AD57X4R::setNOP()
 {
   output_.header = 0x18;
+}
+
+void AD57X4R::sendOutput()
+{
+  byte out_byte_header;
+  byte out_byte_data_high;
+  byte out_byte_data_low;
+
+  spiBeginTransaction();
+
+  // Create and send command bytes
+  out_byte_header = output_.header;
+  if (unipolar_)
+  {
+    unsigned int data;
+    data = output_.data.unipolar;
+    output_.data.unipolar = 0;
+    out_byte_data_high = highByte(data);
+    out_byte_data_low = lowByte(data);
+  }
+  else
+  {
+    int data;
+    data = output_.data.bipolar;
+    output_.data.bipolar = 0;
+    out_byte_data_high = highByte(data);
+    out_byte_data_low = lowByte(data);
+  }
+  SPI.transfer(out_byte_header);
+  SPI.transfer(out_byte_data_high);
+  SPI.transfer(out_byte_data_low);
+
+  spiEndTransaction();
+}
+
+int AD57X4R::readInput()
+{
+  byte out_byte_header;
+  byte out_byte_data_high;
+  byte out_byte_data_low;
+  byte in_byte_data_high;
+  byte in_byte_data_low;
+  int return_data;
+
+  // Send NOP command in header
+  setNOP();
+
+  spiBeginTransaction();
+
+  // Create and send command bytes
+  out_byte_header = output_.header;
+  out_byte_data_high = 0;
+  out_byte_data_low = 0;
+  SPI.transfer(out_byte_header);
+  in_byte_data_high = SPI.transfer(out_byte_data_high);
+  in_byte_data_low = SPI.transfer(out_byte_data_low);
+
+  spiEndTransaction();
+
+  // Fill return data
+  return_data = ((int)in_byte_data_high << 8) | (int)in_byte_data_low;
+  return return_data;
+}
+
+void AD57X4R::setData(const unsigned int value)
+{
+  switch (resolution_)
+  {
+    case AD5754R:
+      output_.data.unipolar = value;
+      break;
+    case AD5734R:
+      output_.data.unipolar = value << 2;
+      break;
+    case AD5724R:
+      output_.data.unipolar = value << 4;
+      break;
+  }
+}
+
+void AD57X4R::setData(const int value)
+{
+}
+
+void AD57X4R::load()
+{
+  setReadWrite(WRITE);
+  setRegisterSelect(REGISTER_SELECT_CONTROL);
+  setControlAddress(CONTROL_ADDRESS_LOAD);
+  sendOutput();
 }
 
 void AD57X4R::csEnable()
@@ -152,111 +314,7 @@ void AD57X4R::csDisable()
   }
 }
 
-void AD57X4R::sendOutput()
-{
-  byte out_byte_header;
-  byte out_byte_data_high;
-  byte out_byte_data_low;
-  byte return_byte;
-
-  if (spi_reset_)
-  {
-    spiBegin();
-  }
-
-  // Enable SPI communication
-  csEnable();
-
-  // Create and send command bytes
-  out_byte_header = output_.header;
-  if (unipolar_)
-  {
-    unsigned int data;
-    data = output_.data.unipolar;
-    output_.data.unipolar = 0;
-    out_byte_data_high = highByte(data);
-    out_byte_data_low = lowByte(data);
-  }
-  else
-  {
-    int data;
-    data = output_.data.bipolar;
-    output_.data.bipolar = 0;
-    out_byte_data_high = highByte(data);
-    out_byte_data_low = lowByte(data);
-  }
-  return_byte = SPI.transfer(out_byte_header);
-  return_byte = SPI.transfer(out_byte_data_high);
-  return_byte = SPI.transfer(out_byte_data_low);
-  // Serial << "out_byte_header = " << _BIN(out_byte_header) << endl;
-  // Serial << "out_byte_data_high = " << _BIN(out_byte_data_high) << endl;
-  // Serial << "out_byte_data_low = " << _BIN(out_byte_data_low) << endl;
-
-  // Disable SPI communication
-  csDisable();
-}
-
-int AD57X4R::readInput()
-{
-  byte out_byte_header;
-  byte out_byte_data_high;
-  byte out_byte_data_low;
-  byte in_byte_header;
-  byte in_byte_data_high;
-  byte in_byte_data_low;
-  int return_data;
-
-  // Send NOP command in header
-  setNOP();
-
-  if (spi_reset_)
-  {
-    spiBegin();
-  }
-
-  // Enable SPI communication
-  csEnable();
-
-  // Create and send command bytes
-  out_byte_header = output_.header;
-  out_byte_data_high = 0;
-  out_byte_data_low = 0;
-  in_byte_header = SPI.transfer(out_byte_header);
-  in_byte_data_high = SPI.transfer(out_byte_data_high);
-  in_byte_data_low = SPI.transfer(out_byte_data_low);
-  // Serial << "in_byte_header = " << _BIN(in_byte_header) << endl;
-  // Serial << "in_byte_data_high = " << _BIN(in_byte_data_high) << endl;
-  // Serial << "in_byte_data_low = " << _BIN(in_byte_data_low) << endl;
-
-  // Disable SPI communication
-  csDisable();
-
-  // Fill return data
-  return_data = ((int)in_byte_data_high << 8) | (int)in_byte_data_low;
-  return return_data;
-}
-
-void AD57X4R::setData(unsigned int value)
-{
-  switch (resolution_)
-  {
-    case AD5754R:
-      output_.data.unipolar = value;
-      break;
-    case AD5734R:
-      output_.data.unipolar = value << 2;
-      break;
-    case AD5724R:
-      output_.data.unipolar = value << 4;
-      break;
-  }
-}
-
-void AD57X4R::setData(int value)
-{
-}
-
-void AD57X4R::setOutputRange(output_ranges output_range, channels channel)
+void AD57X4R::setOutputRange(const output_ranges output_range, const channels channel)
 {
   setReadWrite(WRITE);
   setRegisterSelect(REGISTER_SELECT_OUTPUT_RANGE_SELECT);
@@ -265,25 +323,25 @@ void AD57X4R::setOutputRange(output_ranges output_range, channels channel)
   {
     case UNIPOLAR_5V:
       unipolar_ = true;
-      output_.data.unipolar = 0b000;
+      output_.data.unipolar = OUTPUT_RANGE_UNIPOLAR_5V;
       break;
     case UNIPOLAR_10V:
       unipolar_ = true;
-      output_.data.unipolar = 0b001;
+      output_.data.unipolar = OUTPUT_RANGE_UNIPOLAR_10V;
       break;
     case BIPOLAR_5V:
       unipolar_ = false;
-      output_.data.bipolar = 0b011;
+      output_.data.bipolar = OUTPUT_RANGE_BIPOLAR_5V;
       break;
     case BIPOLAR_10V:
       unipolar_ = false;
-      output_.data.bipolar = 0b101;
+      output_.data.bipolar = OUTPUT_RANGE_BIPOLAR_10V;
       break;
   }
   sendOutput();
 }
 
-void AD57X4R::setPowerControlRegister(channels channel)
+void AD57X4R::setPowerControlRegister(const channels channel)
 {
   setReadWrite(WRITE);
   setRegisterSelect(REGISTER_SELECT_POWER_CONTROL);
@@ -313,105 +371,4 @@ void AD57X4R::setPowerControlRegister(channels channel)
   }
   sendOutput();
   unipolar_ = unipolar_previous;
-}
-
-int AD57X4R::readPowerControlRegister()
-{
-  int return_data;
-  setReadWrite(READ);
-  setRegisterSelect(REGISTER_SELECT_POWER_CONTROL);
-  setDACAddress(A);
-  sendOutput();
-  return_data = readInput();
-  return return_data;
-}
-
-void AD57X4R::analogWrite(channels channel, unsigned int value)
-{
-  if (unipolar_)
-  {
-    setReadWrite(WRITE);
-    setRegisterSelect(REGISTER_SELECT_DAC);
-    setDACAddress(channel);
-    setData(value);
-    sendOutput();
-  }
-}
-
-void AD57X4R::analogWrite(channels channel, int value)
-{
-  if (unipolar_)
-  {
-    analogWrite(channel,(unsigned int)value);
-  }
-}
-
-void AD57X4R::analogWrite(int pin, unsigned int value)
-{
-  channels channel;
-  // Unnecessary and way too much code, but very explicit
-  switch (pin)
-  {
-    case 0:
-      channel = A;
-      break;
-    case 1:
-      channel = B;
-      break;
-    case 2:
-      channel = C;
-      break;
-    case 3:
-      channel = D;
-      break;
-  }
-  analogWrite(channel, value);
-}
-
-void AD57X4R::analogWrite(int pin, int value)
-{
-  channels channel;
-  // Unnecessary and way too much code, but very explicit
-  switch (pin)
-  {
-    case 0:
-      channel = A;
-      break;
-    case 1:
-      channel = B;
-      break;
-    case 2:
-      channel = C;
-      break;
-    case 3:
-      channel = D;
-      break;
-  }
-  analogWrite(channel, value);
-}
-
-unsigned int AD57X4R::getMaxDacValue()
-{
-  switch (resolution_)
-  {
-    case AD5724R:
-      return 4095;
-      break;
-    case AD5734R:
-      return 16383;
-      break;
-    case AD5754R:
-      return 65535;
-      break;
-  }
-}
-
-void AD57X4R::setCSInvert()
-{
-  cs_invert_flag_ = true;
-}
-
-void AD57X4R::setCSNormal()
-{
-  cs_invert_flag_ = false;
 }

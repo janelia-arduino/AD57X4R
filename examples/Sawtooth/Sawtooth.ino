@@ -1,5 +1,3 @@
-#include <Arduino.h>
-#include <SPI.h>
 #include <AD57X4R.h>
 #include <Streaming.h>
 
@@ -20,7 +18,7 @@ void setup()
   Serial.begin(BAUD);
 
   // Initialize DAC
-  dac.init(AD57X4R::AD5754R, AD57X4R::UNIPOLAR_5V, AD57X4R::ALL);
+  dac.init(AD57X4R::AD5754R, AD57X4R::UNIPOLAR_5V);
 
   // Check to make sure power_control_register set properly
   power_control_register = dac.readPowerControlRegister();

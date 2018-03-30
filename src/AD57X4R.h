@@ -10,9 +10,7 @@
 // ----------------------------------------------------------------------------
 #ifndef AD57X4R_H
 #define AD57X4R_H
-#include <Arduino.h>
 #include <SPI.h>
-#include <Streaming.h>
 
 
 class AD57X4R
@@ -22,17 +20,56 @@ public:
   enum output_ranges {UNIPOLAR_5V, UNIPOLAR_10V, BIPOLAR_5V, BIPOLAR_10V};
   enum channels {A, B, C, D, ALL};
   AD57X4R();
-  AD57X4R(int cs_pin);
-  void init(resolutions resolution=AD5754R, output_ranges output_range=UNIPOLAR_5V, boolean spi_reset=false);
+  AD57X4R(const int cs_pin);
+  void init(const resolutions resolution=AD5754R, const output_ranges output_range=UNIPOLAR_5V);
   int readPowerControlRegister();
-  void analogWrite(channels channel, unsigned int value);
-  void analogWrite(channels channel, int value);
-  void analogWrite(int pin, unsigned int value);
-  void analogWrite(int pin, int value);
+  void analogWrite(const channels channel, const unsigned int value);
+  void analogWrite(const channels channel, const int value);
+  void analogWrite(const int pin, const unsigned int value);
+  void analogWrite(const int pin, const int value);
   unsigned int getMaxDacValue();
   void setCSInvert();
   void setCSNormal();
 private:
+  // Read/Write Bit
+  const static uint8_t READ = 1;
+  const static uint8_t WRITE = 0;
+  const static uint8_t READ_WRITE_BIT_SHIFT = 7;
+  const static uint8_t READ_WRITE_BIT_COUNT = 1;
+
+  // Register Select Bits
+  const static uint8_t REGISTER_SELECT_DAC = 0b000;
+  const static uint8_t REGISTER_SELECT_OUTPUT_RANGE_SELECT = 0b001;
+  const static uint8_t REGISTER_SELECT_POWER_CONTROL = 0b010;
+  const static uint8_t REGISTER_SELECT_CONTROL = 0b011;
+  const static uint8_t REGISTER_SELECT_BIT_SHIFT = 3;
+  const static uint8_t REGISTER_SELECT_BIT_COUNT = 3;
+
+  const static uint8_t ADDRESS_BIT_SHIFT =  0;
+  const static uint8_t ADDRESS_BIT_COUNT = 3;
+
+  // DAC Address Bits
+  const static uint8_t DAC_ADDRESS_A = 0b000;
+  const static uint8_t DAC_ADDRESS_B = 0b001;
+  const static uint8_t DAC_ADDRESS_C = 0b010;
+  const static uint8_t DAC_ADDRESS_D = 0b011;
+  const static uint8_t DAC_ADDRESS_ALL = 0b100;
+
+  // Control Register Functions
+  const static uint8_t CONTROL_ADDRESS_NOP = 0b000;
+  const static uint8_t CONTROL_ADDRESS_CLEAR = 0b100;
+  const static uint8_t CONTROL_ADDRESS_LOAD = 0b101;
+
+  // Output Ranges
+  const static uint8_t OUTPUT_RANGE_UNIPOLAR_5V = 0b000;
+  const static uint8_t OUTPUT_RANGE_UNIPOLAR_10V = 0b001;
+  const static uint8_t OUTPUT_RANGE_BIPOLAR_5V = 0b011;
+  const static uint8_t OUTPUT_RANGE_BIPOLAR_10V = 0b100;
+
+  const static uint32_t SPI_CLOCK = 8000000;
+  const static uint8_t SPI_BIT_ORDER = MSBFIRST;
+  const static uint8_t SPI_MODE = SPI_MODE2;
+
   int resolution_;
   int cs_pin_;
   struct shift_register
@@ -47,22 +84,25 @@ private:
   struct shift_register input_;
   boolean unipolar_;
   boolean cs_invert_flag_;
-  boolean spi_reset_;
 
-  void spiBegin();
-  void setupCS(int cs_pin);
-  void setHeader(byte value, byte bit_shift, byte bit_count);
-  void setReadWrite(byte value);
-  void setRegisterSelect(byte value);
-  void setDACAddress(channels channel);
+  void setupCS(const int cs_pin);
+  void spiBeginTransaction();
+  void spiEndTransaction();
+  channels pinToChannel(const int pin);
+  void setHeader(const byte value, const byte bit_shift, const byte bit_count);
+  void setReadWrite(const byte value);
+  void setRegisterSelect(const byte value);
+  void setDACAddress(const channels channel);
+  void setControlAddress(const uint8_t address);
   void setNOP();
   void sendOutput();
   int readInput();
-  void setPowerControlRegister(channels channel);
-  void setOutputRange(output_ranges output_range, channels channel);
-  void setData(unsigned int value);
-  void setData(int value);
+  void setData(const unsigned int value);
+  void setData(const int value);
+  void load();
   void csEnable();
   void csDisable();
+  void setOutputRange(const output_ranges output_range, const channels channel);
+  void setPowerControlRegister(const channels channel);
 };
 #endif

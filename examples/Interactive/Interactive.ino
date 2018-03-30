@@ -1,8 +1,5 @@
-#include <Arduino.h>
-#include <Streaming.h>
-#include <SPI.h>
-#include <BetterMap.h>
 #include <AD57X4R.h>
+#include <Streaming.h>
 
 
 const int DAC_CS = 49;
@@ -20,7 +17,7 @@ unsigned int dac_value_max;
 
 void parse(char *line, char **argv, uint8_t max_args)
 {
-  uint8_t argCount = 0;
+  uint8_t arg_count = 0;
   while (*line != '\0')
   { /* if not the end of line ....... */
     while (*line == ',' || *line == ' ' || *line == '\t' || *line == '\n')
@@ -28,8 +25,8 @@ void parse(char *line, char **argv, uint8_t max_args)
       *line++ = '\0'; /* replace commas and white spaces with 0 */
     }
     *argv++ = line; /* save the argument position */
-    argCount++;
-    if (argCount == max_args-1)
+    arg_count++;
+    if (arg_count == max_args-1)
     {
       break;
     }
@@ -65,7 +62,7 @@ void loop()
       if (0 < strlen(argv[1]))
       {
         unsigned int millivolt_value = atoi(argv[1]);
-        unsigned int dac_value = betterMap(millivolt_value,0,MILLIVOLT_MAX,0,dac_value_max);
+        unsigned int dac_value = map(millivolt_value,0,MILLIVOLT_MAX,0,dac_value_max);
         dac.analogWrite(AD57X4R::ALL,dac_value);
       }
       else
