@@ -3,7 +3,7 @@
 
 
 const int LOOP_DELAY = 10;
-const int DAC_CS = 49;
+const int DAC_CS = 10;
 const long BAUD = 115200;
 
 const int VALUE_INC = 100;

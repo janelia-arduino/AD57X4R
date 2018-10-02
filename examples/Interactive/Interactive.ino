@@ -2,7 +2,7 @@
 #include <Streaming.h>
 
 
-const int DAC_CS = 49;
+const int DAC_CS = 10;
 const long BAUD = 115200;
 const unsigned int MILLIVOLT_MAX = 5000;
 

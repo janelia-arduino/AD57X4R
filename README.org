@@ -4,7 +4,11 @@
 
 * Library Information
   - Author :: Peter Polidoro
+  - Version :: 1.2.0
   - License :: BSD
+  - URL :: https://github.com/janelia-arduino/AD57X4R
+  - Author :: Peter Polidoro
+  - Email :: peterpolidoro@gmail.com
 
   Provides an SPI based interface to the AD57X4R Complete, Quad,
   12-/14-/16-Bit, Serial Input, Unipolar/Bipolar Voltage Output DACs.
