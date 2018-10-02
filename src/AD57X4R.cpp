@@ -13,12 +13,35 @@
 
 AD57X4R::AD57X4R()
 {
+  output_.header = 0;
 }
 
-AD57X4R::AD57X4R(const int cs_pin)
+AD57X4R::AD57X4R(const size_t chip_select_pin)
 {
-  setupCS(cs_pin);
   output_.header = 0;
+  setChipSelectPin(chip_select_pin);
+}
+
+void AD57X4R::setChipSelectPin(const size_t pin)
+{
+  cs_invert_flag_ = false;
+  pinMode(pin,OUTPUT);
+  digitalWrite(pin,HIGH);
+  cs_pin_ = pin;
+}
+
+void AD57X4R::setLoadDacPin(const size_t pin)
+{
+  pinMode(pin,OUTPUT);
+  digitalWrite(pin,LOW);
+  ldac_pin_ = pin;
+}
+
+void AD57X4R::setClearPin(const size_t pin)
+{
+  pinMode(pin,OUTPUT);
+  digitalWrite(pin,HIGH);
+  clr_pin_ = pin;
 }
 
 void AD57X4R::init(const resolutions resolution, const output_ranges output_range)
@@ -60,13 +83,13 @@ void AD57X4R::analogWrite(const channels channel, const int value)
   load();
 }
 
-void AD57X4R::analogWrite(const int pin, const unsigned int value)
+void AD57X4R::analogWrite(const size_t pin, const unsigned int value)
 {
   channels channel = pinToChannel(pin);
   analogWrite(channel, value);
 }
 
-void AD57X4R::analogWrite(const int pin, const int value)
+void AD57X4R::analogWrite(const size_t pin, const int value)
 {
   channels channel = pinToChannel(pin);
   analogWrite(channel, value);
@@ -101,14 +124,6 @@ void AD57X4R::setCSNormal()
 }
 
 // private
-void AD57X4R::setupCS(const int cs_pin)
-{
-  cs_invert_flag_ = false;
-  pinMode(cs_pin,OUTPUT);
-  digitalWrite(cs_pin,HIGH);
-  cs_pin_ = cs_pin;
-}
-
 void AD57X4R::spiBeginTransaction()
 {
   SPI.beginTransaction(SPISettings(SPI_CLOCK,SPI_BIT_ORDER,SPI_MODE));
@@ -121,7 +136,7 @@ void AD57X4R::spiEndTransaction()
   SPI.endTransaction();
 }
 
-AD57X4R::channels AD57X4R::pinToChannel(const int pin)
+AD57X4R::channels AD57X4R::pinToChannel(const size_t pin)
 {
   channels channel = ALL;
   // Unnecessary and way too much code, but very explicit

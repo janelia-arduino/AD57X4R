@@ -2,11 +2,13 @@
 #include <Streaming.h>
 
 
-const int DAC_CS = 10;
+const size_t CHIP_SELECT_PIN = 10;
+const size_t LOAD_DAC_PIN = 3;
+const size_t CLEAR_PIN = 4;
 const long BAUD = 115200;
 const unsigned int MILLIVOLT_MAX = 5000;
 
-AD57X4R dac = AD57X4R(DAC_CS);
+AD57X4R dac = AD57X4R(CHIP_SELECT_PIN);
 
 char input_buffer[128];
 uint8_t idx = 0;
@@ -46,7 +48,10 @@ void setup()
   Serial.println("* System ready *");
 
   // Initialize DAC
+  dac.setLoadDacPin(LOAD_DAC_PIN);
+  dac.setClearPin(CLEAR_PIN);
   dac.init(AD57X4R::AD5754R, AD57X4R::UNIPOLAR_5V);
+
   dac_value_max = dac.getMaxDacValue();
   Serial << "dac_value_max = " << dac_value_max << endl;
 }

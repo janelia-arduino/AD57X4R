@@ -19,15 +19,24 @@ public:
   enum resolutions {AD5724R, AD5734R, AD5754R};
   enum output_ranges {UNIPOLAR_5V, UNIPOLAR_10V, BIPOLAR_5V, BIPOLAR_10V};
   enum channels {A, B, C, D, ALL};
+
   AD57X4R();
-  AD57X4R(const int cs_pin);
+  AD57X4R(const size_t chip_select_pin);
+
+  void setChipSelectPin(const size_t pin);
+  void setLoadDacPin(const size_t pin);
+  void setClearPin(const size_t pin);
   void init(const resolutions resolution=AD5754R, const output_ranges output_range=UNIPOLAR_5V);
+
   int readPowerControlRegister();
+
   void analogWrite(const channels channel, const unsigned int value);
   void analogWrite(const channels channel, const int value);
-  void analogWrite(const int pin, const unsigned int value);
-  void analogWrite(const int pin, const int value);
+  void analogWrite(const size_t pin, const unsigned int value);
+  void analogWrite(const size_t pin, const int value);
+
   unsigned int getMaxDacValue();
+
   void setCSInvert();
   void setCSNormal();
 private:
@@ -71,7 +80,11 @@ private:
   const static uint8_t SPI_MODE = SPI_MODE2;
 
   int resolution_;
-  int cs_pin_;
+
+  size_t cs_pin_;
+  size_t ldac_pin_;
+  size_t clr_pin_;
+
   struct shift_register
   {
     byte header;
@@ -85,10 +98,9 @@ private:
   boolean unipolar_;
   boolean cs_invert_flag_;
 
-  void setupCS(const int cs_pin);
   void spiBeginTransaction();
   void spiEndTransaction();
-  channels pinToChannel(const int pin);
+  channels pinToChannel(const size_t pin);
   void setHeader(const byte value, const byte bit_shift, const byte bit_count);
   void setReadWrite(const byte value);
   void setRegisterSelect(const byte value);
