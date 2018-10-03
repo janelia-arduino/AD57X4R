@@ -6,7 +6,10 @@ const size_t CHIP_SELECT_PIN = 10;
 const size_t LOAD_DAC_PIN = 3;
 const size_t CLEAR_PIN = 4;
 const long BAUD = 115200;
-const unsigned int MILLIVOLT_MAX = 5000;
+
+const long DAC_CHANNEL = 0;
+
+const size_t MILLIVOLT_MAX = 5000;
 
 AD57X4R dac = AD57X4R(CHIP_SELECT_PIN);
 
@@ -15,7 +18,7 @@ uint8_t idx = 0;
 boolean input_complete = false;
 char *argv[8];
 int arg1, arg2, arg3;
-unsigned int dac_value_max;
+long dac_value_max;
 
 void parse(char *line, char **argv, uint8_t max_args)
 {
@@ -50,7 +53,7 @@ void setup()
   // Initialize DAC
   dac.setLoadDacPin(LOAD_DAC_PIN);
   dac.setClearPin(CLEAR_PIN);
-  dac.init(AD57X4R::AD5754R, AD57X4R::UNIPOLAR_5V);
+  dac.setup(AD57X4R::AD5754R);
 
   dac_value_max = dac.getMaxDacValue();
   Serial << "dac_value_max = " << dac_value_max << endl;

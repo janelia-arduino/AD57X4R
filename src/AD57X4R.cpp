@@ -13,18 +13,15 @@
 
 AD57X4R::AD57X4R()
 {
-  output_.header = 0;
 }
 
 AD57X4R::AD57X4R(const size_t chip_select_pin)
 {
-  output_.header = 0;
   setChipSelectPin(chip_select_pin);
 }
 
 void AD57X4R::setChipSelectPin(const size_t pin)
 {
-  cs_invert_flag_ = false;
   pinMode(pin,OUTPUT);
   digitalWrite(pin,HIGH);
   cs_pin_ = pin;
@@ -44,86 +41,162 @@ void AD57X4R::setClearPin(const size_t pin)
   clr_pin_ = pin;
 }
 
-void AD57X4R::init(const resolutions resolution, const output_ranges output_range)
+void AD57X4R::setup(const Resolution resolution,
+                    const uint8_t chip_count)
 {
-  SPI.begin();
-  resolution_ = resolution;
-  setOutputRange(output_range, ALL);
-  setPowerControlRegister(ALL);
-}
-
-int AD57X4R::readPowerControlRegister()
-{
-  int return_data;
-  setReadWrite(READ);
-  setRegisterSelect(REGISTER_SELECT_POWER_CONTROL);
-  setDACAddress(A);
-  sendOutput();
-  return_data = readInput();
-  return return_data;
-}
-
-void AD57X4R::analogWrite(const channels channel, const unsigned int value)
-{
-  setReadWrite(WRITE);
-  setRegisterSelect(REGISTER_SELECT_DAC);
-  setDACAddress(channel);
-  setData(value);
-  sendOutput();
-  load();
-}
-
-void AD57X4R::analogWrite(const channels channel, const int value)
-{
-  setReadWrite(WRITE);
-  setRegisterSelect(REGISTER_SELECT_DAC);
-  setDACAddress(channel);
-  setData(value);
-  sendOutput();
-  load();
-}
-
-void AD57X4R::analogWrite(const size_t pin, const unsigned int value)
-{
-  channels channel = pinToChannel(pin);
-  analogWrite(channel, value);
-}
-
-void AD57X4R::analogWrite(const size_t pin, const int value)
-{
-  channels channel = pinToChannel(pin);
-  analogWrite(channel, value);
-}
-
-unsigned int AD57X4R::getMaxDacValue()
-{
-  unsigned int max_dac_value = 65535;
-  switch (resolution_)
+  if ((chip_count >= CHIP_COUNT_MIN) && (chip_count <= CHIP_COUNT_MAX))
   {
-    case AD5724R:
-      max_dac_value = 4095;
-      break;
-    case AD5734R:
-      max_dac_value = 16383;
-      break;
-    case AD5754R:
-      max_dac_value = 65535;
-      break;
+    chip_count_ = chip_count;
+  }
+  else
+  {
+    chip_count_ = CHIP_COUNT_MIN;
+  }
+  resolution_ = resolution;
+  unipolar_ = true;
+  SPI.begin();
+  powerUpAllDacs();
+}
+
+void AD57X4R::setOutputRange(const size_t channel,
+                             const Range range)
+{
+  uint8_t chip_index = channelToChipIndex(channel);
+  uint8_t channel_address = channelToChannelAddress(channel);
+  setOutputRangeToChip(chip_index,channel_address,range);
+}
+
+void AD57X4R::setOutputRangeAll(const Range range)
+{
+  uint8_t chip_index = CHIP_INDEX_ALL;
+  uint8_t channel_address = CHANNEL_ADDRESS_ALL;
+  setOutputRangeToChip(chip_index,channel_address,range);
+}
+
+// int AD57X4R::readPowerControlRegister()
+// {
+//   int return_data;
+//   setReadWrite(READ);
+//   setRegisterSelect(REGISTER_POWER_CONTROL);
+//   setDacAddress(A);
+//   sendOutput();
+//   return_data = readInput();
+//   return return_data;
+// }
+
+long AD57X4R::getMinDacValue()
+{
+  long min_dac_value = 0;
+  if (unipolar_)
+  {
+    min_dac_value = 0;
+  }
+  else
+  {
+    switch (resolution_)
+    {
+      case AD5724R:
+        min_dac_value = -2048;
+        break;
+      case AD5734R:
+        min_dac_value = -8192;
+        break;
+      case AD5754R:
+        min_dac_value = -32768;
+        break;
+    }
+  }
+  return min_dac_value;
+}
+
+long AD57X4R::getMaxDacValue()
+{
+  long max_dac_value = 0;
+  if (unipolar_)
+  {
+    switch (resolution_)
+    {
+      case AD5724R:
+        max_dac_value = 4095;
+        break;
+      case AD5734R:
+        max_dac_value = 16383;
+        break;
+      case AD5754R:
+        max_dac_value = 65536;
+        break;
+    }
+  }
+  else
+  {
+    switch (resolution_)
+    {
+      case AD5724R:
+        max_dac_value = 2047;
+        break;
+      case AD5734R:
+        max_dac_value = 8191;
+        break;
+      case AD5754R:
+        max_dac_value = 32767;
+        break;
+    }
   }
   return max_dac_value;
 }
 
-void AD57X4R::setCSInvert()
+void AD57X4R::analogWrite(const size_t channel, const long value)
 {
-  cs_invert_flag_ = true;
+  uint8_t chip_index = channelToChipIndex(channel);
+  uint8_t channel_address = channelToChannelAddress(channel);
+  analogWriteToChip(chip_index,channel_address,value);
 }
 
-void AD57X4R::setCSNormal()
+void AD57X4R::analogWriteAll(const long value)
 {
-  cs_invert_flag_ = false;
+  uint8_t chip_index = CHIP_INDEX_ALL;
+  uint8_t channel_address = CHANNEL_ADDRESS_ALL;
+  analogWriteToChip(chip_index,channel_address,value);
 }
 
 // private
+uint8_t AD57X4R::channelToChipIndex(const size_t channel)
+{
+  uint8_t chip_index = channel / CHANNEL_COUNT_PER_CHIP;
+  return chip_index;
+}
+
+uint8_t AD57X4R::channelToChannelAddress(const size_t channel)
+{
+  uint8_t chip_channel = channel % CHANNEL_COUNT_PER_CHIP;
+  uint8_t channel_address;
+  switch (chip_channel)
+  {
+    case 0:
+      channel_address = CHANNEL_ADDRESS_A;
+      break;
+    case 1:
+      channel_address = CHANNEL_ADDRESS_B;
+      break;
+    case 2:
+      channel_address = CHANNEL_ADDRESS_C;
+      break;
+    case 3:
+      channel_address = CHANNEL_ADDRESS_D;
+      break;
+  }
+  return channel_address;
+}
+
+void AD57X4R::csEnable()
+{
+  digitalWrite(cs_pin_,LOW);
+}
+
+void AD57X4R::csDisable()
+{
+  digitalWrite(cs_pin_,HIGH);
+}
 void AD57X4R::spiBeginTransaction()
 {
   SPI.beginTransaction(SPISettings(SPI_CLOCK,SPI_BIT_ORDER,SPI_MODE));
@@ -136,254 +209,146 @@ void AD57X4R::spiEndTransaction()
   SPI.endTransaction();
 }
 
-AD57X4R::channels AD57X4R::pinToChannel(const size_t pin)
+void AD57X4R::writeMosiDatagramToChip(const int chip_index,
+                                      const AD57X4R::MosiDatagram mosi_datagram)
 {
-  channels channel = ALL;
-  // Unnecessary and way too much code, but very explicit
-  switch (pin)
-  {
-    case 0:
-      channel = A;
-      break;
-    case 1:
-      channel = B;
-      break;
-    case 2:
-      channel = C;
-      break;
-    case 3:
-      channel = D;
-      break;
-  }
-  return channel;
-}
-
-void AD57X4R::setHeader(const byte value, const byte bit_shift, const byte bit_count)
-{
-  byte bit_mask = 0;
-  for (byte bit=0; bit<bit_count; bit++)
-  {
-    bitSet(bit_mask,(bit+bit_shift));
-  }
-  byte header = output_.header;
-  header &= ~bit_mask;
-  header |= value << bit_shift;
-  output_.header = header;
-}
-
-void AD57X4R::setReadWrite(const byte value)
-{
-  setHeader(value,READ_WRITE_BIT_SHIFT,READ_WRITE_BIT_COUNT);
-}
-
-void AD57X4R::setRegisterSelect(const byte value)
-{
-  setHeader(value,REGISTER_SELECT_BIT_SHIFT,REGISTER_SELECT_BIT_COUNT);
-}
-
-void AD57X4R::setDACAddress(const channels channel)
-{
-  byte value = DAC_ADDRESS_ALL;
-  switch (channel)
-  {
-    case A:
-      value = DAC_ADDRESS_A;
-      break;
-    case B:
-      value = DAC_ADDRESS_B;
-      break;
-    case C:
-      value = DAC_ADDRESS_C;
-      break;
-    case D:
-      value = DAC_ADDRESS_D;
-      break;
-    case ALL:
-      value = DAC_ADDRESS_ALL;
-      break;
-  }
-  setHeader(value,ADDRESS_BIT_SHIFT,ADDRESS_BIT_COUNT);
-}
-
-void AD57X4R::setControlAddress(const uint8_t address)
-{
-  setHeader(address,ADDRESS_BIT_SHIFT,ADDRESS_BIT_COUNT);
-}
-
-void AD57X4R::setNOP()
-{
-  output_.header = 0x18;
-}
-
-void AD57X4R::sendOutput()
-{
-  byte out_byte_header;
-  byte out_byte_data_high;
-  byte out_byte_data_low;
-
   spiBeginTransaction();
-
-  // Create and send command bytes
-  out_byte_header = output_.header;
-  if (unipolar_)
+  for (int i=(DATAGRAM_SIZE - 1); i>=0; --i)
   {
-    unsigned int data;
-    data = output_.data.unipolar;
-    output_.data.unipolar = 0;
-    out_byte_data_high = highByte(data);
-    out_byte_data_low = lowByte(data);
+    uint8_t byte_write = (mosi_datagram.uint32 >> (8*i)) & 0xff;
+    SPI.transfer(byte_write);
   }
-  else
-  {
-    int data;
-    data = output_.data.bipolar;
-    output_.data.bipolar = 0;
-    out_byte_data_high = highByte(data);
-    out_byte_data_low = lowByte(data);
-  }
-  SPI.transfer(out_byte_header);
-  SPI.transfer(out_byte_data_high);
-  SPI.transfer(out_byte_data_low);
-
   spiEndTransaction();
 }
 
-int AD57X4R::readInput()
+void AD57X4R::powerUpAllDacs()
 {
-  byte out_byte_header;
-  byte out_byte_data_high;
-  byte out_byte_data_low;
-  byte in_byte_data_high;
-  byte in_byte_data_low;
-  int return_data;
+  uint16_t data = (POWER_CONTROL_DAC_A |
+                   POWER_CONTROL_DAC_B |
+                   POWER_CONTROL_DAC_C |
+                   POWER_CONTROL_DAC_D |
+                   POWER_CONTROL_REF);
 
-  // Send NOP command in header
-  setNOP();
-
-  spiBeginTransaction();
-
-  // Create and send command bytes
-  out_byte_header = output_.header;
-  out_byte_data_high = 0;
-  out_byte_data_low = 0;
-  SPI.transfer(out_byte_header);
-  in_byte_data_high = SPI.transfer(out_byte_data_high);
-  in_byte_data_low = SPI.transfer(out_byte_data_low);
-
-  spiEndTransaction();
-
-  // Fill return data
-  return_data = ((int)in_byte_data_high << 8) | (int)in_byte_data_low;
-  return return_data;
+  MosiDatagram mosi_datagram;
+  mosi_datagram.uint32 = 0;
+  mosi_datagram.fields.rw = RW_WRITE;
+  mosi_datagram.fields.reg = REGISTER_POWER_CONTROL;
+  mosi_datagram.fields.channel_address = 0;
+  mosi_datagram.fields.data = data;
+  int chip_index = CHIP_INDEX_ALL;
+  writeMosiDatagramToChip(chip_index,mosi_datagram);
 }
 
-void AD57X4R::setData(const unsigned int value)
+void AD57X4R::setOutputRangeToChip(const int chip_index,
+                                   const uint8_t channel_address,
+                                   const Range range)
 {
-  switch (resolution_)
-  {
-    case AD5754R:
-      output_.data.unipolar = value;
-      break;
-    case AD5734R:
-      output_.data.unipolar = value << 2;
-      break;
-    case AD5724R:
-      output_.data.unipolar = value << 4;
-      break;
-  }
-}
-
-void AD57X4R::setData(const int value)
-{
-}
-
-void AD57X4R::load()
-{
-  setReadWrite(WRITE);
-  setRegisterSelect(REGISTER_SELECT_CONTROL);
-  setControlAddress(CONTROL_ADDRESS_LOAD);
-  sendOutput();
-}
-
-void AD57X4R::csEnable()
-{
-  if (cs_invert_flag_ == false)
-  {
-    digitalWrite(cs_pin_,LOW);
-  }
-  else
-  {
-    digitalWrite(cs_pin_,HIGH);
-  }
-}
-
-void AD57X4R::csDisable()
-{
-  if (cs_invert_flag_ == false)
-  {
-    digitalWrite(cs_pin_,HIGH);
-  }
-  else
-  {
-    digitalWrite(cs_pin_,LOW);
-  }
-}
-
-void AD57X4R::setOutputRange(const output_ranges output_range, const channels channel)
-{
-  setReadWrite(WRITE);
-  setRegisterSelect(REGISTER_SELECT_OUTPUT_RANGE_SELECT);
-  setDACAddress(channel);
-  switch (output_range)
+  uint16_t data;
+  switch (range)
   {
     case UNIPOLAR_5V:
       unipolar_ = true;
-      output_.data.unipolar = OUTPUT_RANGE_UNIPOLAR_5V;
+      data = OUTPUT_RANGE_UNIPOLAR_5V;
       break;
     case UNIPOLAR_10V:
       unipolar_ = true;
-      output_.data.unipolar = OUTPUT_RANGE_UNIPOLAR_10V;
+      data = OUTPUT_RANGE_UNIPOLAR_10V;
+      break;
+    case UNIPOLAR_10V8:
+      unipolar_ = true;
+      data = OUTPUT_RANGE_UNIPOLAR_10V8;
       break;
     case BIPOLAR_5V:
       unipolar_ = false;
-      output_.data.bipolar = OUTPUT_RANGE_BIPOLAR_5V;
+      data = OUTPUT_RANGE_BIPOLAR_5V;
       break;
     case BIPOLAR_10V:
       unipolar_ = false;
-      output_.data.bipolar = OUTPUT_RANGE_BIPOLAR_10V;
+      data = OUTPUT_RANGE_BIPOLAR_10V;
+      break;
+    case BIPOLAR_10V8:
+      unipolar_ = false;
+      data = OUTPUT_RANGE_BIPOLAR_10V8;
+      break;
+    default:
+      unipolar_ = true;
+      data = OUTPUT_RANGE_UNIPOLAR_5V;
       break;
   }
-  sendOutput();
+  MosiDatagram mosi_datagram;
+  mosi_datagram.uint32 = 0;
+  mosi_datagram.fields.rw = RW_WRITE;
+  mosi_datagram.fields.reg = REGISTER_OUTPUT_RANGE;
+  mosi_datagram.fields.channel_address = channel_address;
+  mosi_datagram.fields.data = data;
+  writeMosiDatagramToChip(chip_index,mosi_datagram);
 }
 
-void AD57X4R::setPowerControlRegister(const channels channel)
+void AD57X4R::analogWriteToChip(const int chip_index,
+                                const uint8_t channel_address,
+                                const long data)
 {
-  setReadWrite(WRITE);
-  setRegisterSelect(REGISTER_SELECT_POWER_CONTROL);
-  setDACAddress(A);
-  bool unipolar_previous = unipolar_;
-  unipolar_ = true;
-  // place internal reference in normal operating mode
-  output_.data.unipolar = 0b10000;
-  // power up DACs
-  switch (channel)
+  MosiDatagram mosi_datagram;
+  mosi_datagram.uint32 = 0;
+  mosi_datagram.fields.rw = RW_WRITE;
+  mosi_datagram.fields.reg = REGISTER_DAC;
+  mosi_datagram.fields.channel_address = channel_address;
+  switch (resolution_)
   {
-    case A:
-      output_.data.unipolar |= 0b0001;
+    case AD5754R:
+      mosi_datagram.fields.data = data;
       break;
-    case B:
-      output_.data.unipolar |= 0b0010;
+    case AD5734R:
+      mosi_datagram.fields.data = data << 2;
       break;
-    case C:
-      output_.data.unipolar |= 0b0100;
-      break;
-    case D:
-      output_.data.unipolar |= 0b1000;
-      break;
-    case ALL:
-      output_.data.unipolar |= 0b1111;
+    case AD5724R:
+      mosi_datagram.fields.data = data << 4;
       break;
   }
-  sendOutput();
-  unipolar_ = unipolar_previous;
+  writeMosiDatagramToChip(chip_index,mosi_datagram);
+  load(chip_index);
 }
+
+void AD57X4R::load(const int chip_index)
+{
+  MosiDatagram mosi_datagram;
+  mosi_datagram.uint32 = 0;
+  mosi_datagram.fields.rw = RW_WRITE;
+  mosi_datagram.fields.reg = REGISTER_CONTROL;
+  mosi_datagram.fields.channel_address = CONTROL_ADDRESS_LOAD;
+  writeMosiDatagramToChip(chip_index,mosi_datagram);
+}
+
+// void AD57X4R::setNOP()
+// {
+//   output_.header = 0x18;
+// }
+
+// int AD57X4R::readInput()
+// {
+//   byte out_byte_header;
+//   byte out_byte_data_high;
+//   byte out_byte_data_low;
+//   byte in_byte_data_high;
+//   byte in_byte_data_low;
+//   int return_data;
+
+//   // Send NOP command in header
+//   setNOP();
+
+//   spiBeginTransaction();
+
+//   // Create and send command bytes
+//   out_byte_header = output_.header;
+//   out_byte_data_high = 0;
+//   out_byte_data_low = 0;
+//   SPI.transfer(out_byte_header);
+//   in_byte_data_high = SPI.transfer(out_byte_data_high);
+//   in_byte_data_low = SPI.transfer(out_byte_data_low);
+
+//   spiEndTransaction();
+
+//   // Fill return data
+//   return_data = ((int)in_byte_data_high << 8) | (int)in_byte_data_low;
+//   return return_data;
+// }
