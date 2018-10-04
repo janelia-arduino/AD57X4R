@@ -36,11 +36,12 @@ public:
   void setup(const Resolution resolution=AD5754R,
              const uint8_t chip_count=1);
 
+  uint8_t getChipCount();
+  size_t getChannelCount();
+
   void setOutputRange(const size_t channel,
                       const Range range);
   void setOutputRangeAll(const Range range);
-
-  // int readPowerControlRegister();
 
   long getMinDacValue();
   long getMaxDacValue();
@@ -48,6 +49,11 @@ public:
   void analogWrite(const size_t channel,
                    const long value);
   void analogWriteAll(const long value);
+
+  bool channelPoweredUp(const size_t channel);
+  bool referencePoweredUp(const uint8_t chip_index);
+  bool thermalShutdown(const uint8_t chip_index);
+  bool channelOverCurrent(const size_t channel);
 
 private:
   size_t cs_pin_;
@@ -62,7 +68,7 @@ private:
 
   const static size_t CHIP_COUNT_MIN = 1;
   const static size_t CHIP_COUNT_MAX = 1;
-  size_t chip_count_;
+  uint8_t chip_count_;
 
   const static uint32_t SPI_CLOCK = 8000000;
   const static uint8_t SPI_BIT_ORDER = MSBFIRST;
@@ -71,8 +77,8 @@ private:
   // Datagrams
   const static uint8_t DATAGRAM_SIZE = 3;
 
-  // MOSI Datagram
-  union MosiDatagram
+  // Datagram
+  union Datagram
   {
     struct Fields
     {
@@ -102,6 +108,7 @@ private:
   const static uint8_t CHANNEL_ADDRESS_C = 0b010;
   const static uint8_t CHANNEL_ADDRESS_D = 0b011;
   const static uint8_t CHANNEL_ADDRESS_ALL = 0b100;
+  const static uint8_t CHANNEL_ADDRESS_POWER_CONTROL = 0b000;
 
   // Control Register Functions
   const static uint8_t CONTROL_ADDRESS_NOP = 0b000;
@@ -137,7 +144,8 @@ private:
   void spiBeginTransaction();
   void spiEndTransaction();
   void writeMosiDatagramToChip(const int chip_index,
-                               const MosiDatagram mosi_datagram);
+                               const Datagram mosi_datagram);
+  Datagram readMisoDatagramFromChip(const int chip_index);
   void powerUpAllDacs();
   void setOutputRangeToChip(const int chip_index,
                             const uint8_t channel_address,
@@ -146,7 +154,6 @@ private:
                          const uint8_t channel_address,
                          const long data);
   void load(const int chip_index);
-  // void setNOP();
-  // int readInput();
+  uint16_t readPowerControlRegister(const uint8_t chip_index);
 };
 #endif
