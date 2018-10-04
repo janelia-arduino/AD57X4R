@@ -67,8 +67,10 @@ private:
   const static int CHIP_INDEX_ALL = -1;
 
   const static size_t CHIP_COUNT_MIN = 1;
-  const static size_t CHIP_COUNT_MAX = 1;
+  const static size_t CHIP_COUNT_MAX = 4;
   uint8_t chip_count_;
+
+  const static size_t CHANNEL_COUNT_MAX = CHIP_COUNT_MAX*CHANNEL_COUNT_PER_CHIP;
 
   const static uint32_t SPI_CLOCK = 8000000;
   const static uint8_t SPI_BIT_ORDER = MSBFIRST;
@@ -135,7 +137,7 @@ private:
   const static uint8_t OUTPUT_RANGE_BIPOLAR_10V = 0b100;
   const static uint8_t OUTPUT_RANGE_BIPOLAR_10V8 = 0b101;
 
-  bool unipolar_;
+  bool unipolar_array_[CHANNEL_COUNT_MAX];
 
   uint8_t channelToChipIndex(const size_t channel);
   uint8_t channelToChannelAddress(const size_t channel);

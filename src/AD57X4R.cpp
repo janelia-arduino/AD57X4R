@@ -53,9 +53,9 @@ void AD57X4R::setup(const Resolution resolution,
     chip_count_ = CHIP_COUNT_MIN;
   }
   resolution_ = resolution;
-  unipolar_ = true;
   SPI.begin();
   powerUpAllDacs();
+  setOutputRangeAll(UNIPOLAR_5V);
 }
 
 uint8_t AD57X4R::getChipCount()
@@ -71,8 +71,11 @@ size_t AD57X4R::getChannelCount()
 void AD57X4R::setOutputRange(const size_t channel,
                              const Range range)
 {
-  uint8_t chip_index = channelToChipIndex(channel);
-  uint8_t channel_address = channelToChannelAddress(channel);
+  size_t channel_constrained = constrain(channel,0,getChannelCount()-1);
+  uint8_t chip_index = channelToChipIndex(channel_constrained);
+  uint8_t channel_address = channelToChannelAddress(channel_constrained);
+  if ((range == UNIPOLAR_5V) || (range == UNIPOLAR_10V))
+  unipolar_array_[channel_constrained] =
   setOutputRangeToChip(chip_index,channel_address,range);
 }
 
