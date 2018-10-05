@@ -7,8 +7,9 @@ const size_t LOAD_DAC_PIN = 3;
 const size_t CLEAR_PIN = 4;
 const long BAUD = 115200;
 
-const int MILLIVOLT_MIN = -10000;
-const int MILLIVOLT_MAX = 10000;
+const size_t CHANNEL_COUNT = 4;
+const double VOLTAGE_MIN = -10.8;
+const double VOLTAGE_MAX = 10.8;
 
 AD57X4R dac = AD57X4R(CHIP_SELECT_PIN);
 
@@ -17,10 +18,8 @@ uint8_t idx = 0;
 bool input_complete = false;
 char *argv[8];
 int arg1, arg2, arg3;
-long dac_value_min;
-long dac_value_max;
-size_t channel_min = 0;
-size_t channel_max;
+const size_t CHANNEL_MIN = 0;
+const size_t CHANNEL_MAX = CHANNEL_COUNT-1;
 
 uint8_t parse(char *line, char **argv, uint8_t max_args)
 {
@@ -56,12 +55,14 @@ void setup()
   dac.setLoadDacPin(LOAD_DAC_PIN);
   dac.setClearPin(CLEAR_PIN);
   dac.setup(AD57X4R::AD5754R);
-  dac.setOutputRangeAll(AD57X4R::BIPOLAR_10V);
-
-  dac_value_min = dac.getMinDacValue();
-  dac_value_max = dac.getMaxDacValue();
-
-  channel_max = dac.getChannelCount() - 1;
+  size_t channel = 0;
+  dac.setOutputRange(channel,AD57X4R::BIPOLAR_10V);
+  channel = 1;
+  dac.setOutputRange(channel,AD57X4R::UNIPOLAR_10V);
+  channel = 2;
+  dac.setOutputRange(channel,AD57X4R::BIPOLAR_5V);
+  channel = 3;
+  dac.setOutputRange(channel,AD57X4R::BIPOLAR_10V8);
 }
 
 
@@ -70,21 +71,18 @@ void loop()
   if (input_complete)
   {
     uint8_t arg_count = parse((char*)input_buffer, argv, sizeof(argv));
-    if (strcmp(argv[0], "analogWrite") == 0)
+    if (strcmp(argv[0], "setVoltage") == 0)
     {
       if ((arg_count == 3) && (0 < strlen(argv[1])) && (0 < strlen(argv[2])))
       {
         size_t channel = atoi(argv[1]);
-        channel = constrain(channel,channel_min,channel_max);
-        int millivolt_value = atoi(argv[2]);
-        millivolt_value = constrain(millivolt_value,MILLIVOLT_MIN,MILLIVOLT_MAX);
-        long dac_value = map(millivolt_value,MILLIVOLT_MIN,MILLIVOLT_MAX,dac_value_min,dac_value_max);
-        dac.analogWrite(channel,dac_value);
-        Serial << "analogWrite CHANNEL: " << channel << ", MILLIVOLT_VALUE: " << millivolt_value << ", DAC_VALUE: " << dac_value << "\n";
+        double voltage_value = atof(argv[2]);
+        dac.setVoltage(channel,voltage_value);
+        Serial << "setVoltage CHANNEL: " << channel << ", VOLTAGE_VALUE: " << voltage_value << "\n";
       }
       else
       {
-        Serial << "analogWrite <CHANNEL> <MILLIVOLT_VALUE>, CHANNEL = {" << channel_min << ".." << channel_max << "}" << ", MILLIVOLT_VALUE = {" << MILLIVOLT_MIN << ".." << MILLIVOLT_MAX << "}" << endl;
+        Serial << "setVoltage <CHANNEL> <VOLTAGE_VALUE>, CHANNEL = {" << CHANNEL_MIN << ".." << CHANNEL_MAX << "}" << ", VOLTAGE_VALUE = {" << VOLTAGE_MIN << ".." << VOLTAGE_MAX << "}" << endl;
       }
     }
     else if (strcmp(argv[0], "channelPoweredUp") == 0)
@@ -92,18 +90,18 @@ void loop()
       if (0 < strlen(argv[1]))
       {
         size_t channel = atoi(argv[1]);
-        channel = constrain(channel,channel_min,channel_max);
+        channel = constrain(channel,CHANNEL_MIN,CHANNEL_MAX);
         bool channel_powered_up = dac.channelPoweredUp(channel);
         Serial << "channel " << channel << " powered up = " << channel_powered_up << endl;
       }
       else
       {
-        Serial << "channelPoweredUP <CHANNEL>, CHANNEL = {" << channel_min << ".." << channel_max << "}" << endl;
+        Serial << "channelPoweredUP <CHANNEL>, CHANNEL = {" << CHANNEL_MIN << ".." << CHANNEL_MAX << "}" << endl;
       }
     }
     else
     {
-      Serial.println("analogWrite <CHANNEL> <MILLIVOLT_VALUE>, channelPoweredUp <CHANNEL>");
+      Serial.println("setVoltage <CHANNEL> <VOLTAGE_VALUE>, channelPoweredUp <CHANNEL>");
     }
 
     input_complete = false;

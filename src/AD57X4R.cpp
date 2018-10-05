@@ -71,29 +71,34 @@ size_t AD57X4R::getChannelCount()
 void AD57X4R::setOutputRange(const size_t channel,
                              const Range range)
 {
-  size_t channel_constrained = constrain(channel,0,getChannelCount()-1);
-  uint8_t chip_index = channelToChipIndex(channel_constrained);
+  size_t channel_constrained = constrain(channel,
+                                         CHANNEL_MIN,
+                                         getChannelCount()-1);
+  uint8_t chip = channelToChip(channel_constrained);
   uint8_t channel_address = channelToChannelAddress(channel_constrained);
-  if ((range == UNIPOLAR_5V) || (range == UNIPOLAR_10V))
-  unipolar_array_[channel_constrained] =
-  setOutputRangeToChip(chip_index,channel_address,range);
+  range_[channel_constrained] = range;
+  setOutputRangeToChip(chip,channel_address,range);
 }
 
 void AD57X4R::setOutputRangeAll(const Range range)
 {
-  uint8_t chip_index = CHIP_INDEX_ALL;
+  uint8_t chip = CHIP_ALL;
   uint8_t channel_address = CHANNEL_ADDRESS_ALL;
-  setOutputRangeToChip(chip_index,channel_address,range);
+  for (size_t channel=0; channel<getChannelCount(); ++channel)
+  {
+    range_[channel] = range;
+  }
+  setOutputRangeToChip(chip,channel_address,range);
 }
 
-long AD57X4R::getMinDacValue()
+long AD57X4R::getMinDacValue(const size_t channel)
 {
   long min_dac_value = 0;
-  if (unipolar_)
+  if (channel >= getChannelCount())
   {
-    min_dac_value = 0;
+    return min_dac_value;
   }
-  else
+  if (rangeIsBipolar(range_[channel]))
   {
     switch (resolution_)
     {
@@ -111,25 +116,14 @@ long AD57X4R::getMinDacValue()
   return min_dac_value;
 }
 
-long AD57X4R::getMaxDacValue()
+long AD57X4R::getMaxDacValue(const size_t channel)
 {
   long max_dac_value = 0;
-  if (unipolar_)
+  if (channel >= getChannelCount())
   {
-    switch (resolution_)
-    {
-      case AD5724R:
-        max_dac_value = 4095;
-        break;
-      case AD5734R:
-        max_dac_value = 16383;
-        break;
-      case AD5754R:
-        max_dac_value = 65536;
-        break;
-    }
+    return max_dac_value;
   }
-  else
+  if (rangeIsBipolar(range_[channel]))
   {
     switch (resolution_)
     {
@@ -144,28 +138,156 @@ long AD57X4R::getMaxDacValue()
         break;
     }
   }
+  else
+  {
+    switch (resolution_)
+    {
+      case AD5724R:
+        max_dac_value = 4095;
+        break;
+      case AD5734R:
+        max_dac_value = 16383;
+        break;
+      case AD5754R:
+        max_dac_value = 65536;
+        break;
+    }
+  }
   return max_dac_value;
 }
 
-void AD57X4R::analogWrite(const size_t channel, const long value)
+void AD57X4R::analogWrite(const size_t channel, const long dac_value)
 {
-  uint8_t chip_index = channelToChipIndex(channel);
-  uint8_t channel_address = channelToChannelAddress(channel);
-  analogWriteToChip(chip_index,channel_address,value);
+  size_t channel_constrained = constrain(channel,
+                                         CHANNEL_MIN,
+                                         getChannelCount()-1);
+  long dac_value_constrained = constrain(dac_value,
+                                         getMinDacValue(channel_constrained),
+                                         getMaxDacValue(channel_constrained));
+  uint8_t chip = channelToChip(channel_constrained);
+  uint8_t channel_address = channelToChannelAddress(channel_constrained);
+  analogWriteToChip(chip,channel_address,dac_value_constrained);
 }
 
-void AD57X4R::analogWriteAll(const long value)
+void AD57X4R::analogWriteAll(const long dac_value)
 {
-  uint8_t chip_index = CHIP_INDEX_ALL;
-  uint8_t channel_address = CHANNEL_ADDRESS_ALL;
-  analogWriteToChip(chip_index,channel_address,value);
+  for (size_t channel=0; channel<getChannelCount(); ++channel)
+  {
+    analogWrite(channel,dac_value);
+  }
+}
+
+double AD57X4R::getMinVoltageValue(const size_t channel)
+{
+  double min_voltage_value = 0.0;
+  if (channel >= getChannelCount())
+  {
+    return min_voltage_value;
+  }
+  switch (range_[channel])
+  {
+    case UNIPOLAR_5V:
+      min_voltage_value = 0.0;
+      break;
+    case UNIPOLAR_10V:
+      min_voltage_value = 0.0;
+      break;
+    case UNIPOLAR_10V8:
+      min_voltage_value = 0.0;
+      break;
+    case BIPOLAR_5V:
+      min_voltage_value = -5.0;
+      break;
+    case BIPOLAR_10V:
+      min_voltage_value = -10.0;
+      break;
+    case BIPOLAR_10V8:
+      min_voltage_value = -10.8;
+      break;
+    default:
+      min_voltage_value = 0.0;
+      break;
+  }
+  return min_voltage_value;
+}
+
+double AD57X4R::getMaxVoltageValue(const size_t channel)
+{
+  double max_voltage_value = 0.0;
+  if (channel >= getChannelCount())
+  {
+    return max_voltage_value;
+  }
+  switch (range_[channel])
+  {
+    case UNIPOLAR_5V:
+      max_voltage_value = 5.0;
+      break;
+    case UNIPOLAR_10V:
+      max_voltage_value = 10.0;
+      break;
+    case UNIPOLAR_10V8:
+      max_voltage_value = 10.8;
+      break;
+    case BIPOLAR_5V:
+      max_voltage_value = 5.0;
+      break;
+    case BIPOLAR_10V:
+      max_voltage_value = 10.0;
+      break;
+    case BIPOLAR_10V8:
+      max_voltage_value = 10.8;
+      break;
+    default:
+      max_voltage_value = 0.0;
+      break;
+  }
+  return max_voltage_value;
+}
+
+void AD57X4R::setVoltage(const size_t channel, const double voltage_value)
+{
+  // Wastes resolution, need to change algorithm
+  size_t channel_constrained = constrain(channel,
+                                         CHANNEL_MIN,
+                                         getChannelCount()-1);
+  double min_voltage_value = getMinVoltageValue(channel_constrained);
+  double max_voltage_value = getMaxVoltageValue(channel_constrained);
+  long voltage_value_scaled = voltage_value * (double)DOUBLE_TO_LONG_SCALE;
+  long min_voltage_value_scaled = min_voltage_value * (double)DOUBLE_TO_LONG_SCALE;
+  long max_voltage_value_scaled = max_voltage_value * (double)DOUBLE_TO_LONG_SCALE;
+  voltage_value_scaled = constrain(voltage_value_scaled,
+                                   min_voltage_value_scaled,
+                                   max_voltage_value_scaled);
+  long min_dac_value = getMinDacValue(channel_constrained);
+  long max_dac_value = getMaxDacValue(channel_constrained);
+  long dac_value = map(voltage_value_scaled,
+                       min_voltage_value_scaled,
+                       max_voltage_value_scaled,
+                       min_dac_value,
+                       max_dac_value);
+  uint8_t chip = channelToChip(channel_constrained);
+  uint8_t channel_address = channelToChannelAddress(channel_constrained);
+  analogWriteToChip(chip,channel_address,dac_value);
+}
+
+void AD57X4R::setVoltageAll(const double voltage_value)
+{
+  for (size_t channel=0; channel<getChannelCount(); ++channel)
+  {
+    setVoltage(channel,voltage_value);
+  }
 }
 
 bool AD57X4R::channelPoweredUp(const size_t channel)
 {
-  uint8_t chip_index = channelToChipIndex(channel);
+  if (channel >= getChannelCount())
+  {
+    return false;
+  }
+  uint8_t chip = channelToChip(channel);
   uint8_t channel_address = channelToChannelAddress(channel);
-  uint16_t data = readPowerControlRegister(chip_index);
+  uint16_t data = readPowerControlRegister(chip);
 
   bool channel_powered_up = false;
   switch (channel_address)
@@ -186,17 +308,25 @@ bool AD57X4R::channelPoweredUp(const size_t channel)
   return channel_powered_up;
 }
 
-bool AD57X4R::referencePoweredUp(const uint8_t chip_index)
+bool AD57X4R::referencePoweredUp(const uint8_t chip)
 {
-  uint16_t data = readPowerControlRegister(chip_index);
+  if (chip >= getChipCount())
+  {
+    return false;
+  }
+  uint16_t data = readPowerControlRegister(chip);
 
   bool reference_powered_up = data & POWER_CONTROL_REF;
   return reference_powered_up;
 }
 
-bool AD57X4R::thermalShutdown(const uint8_t chip_index)
+bool AD57X4R::thermalShutdown(const uint8_t chip)
 {
-  uint16_t data = readPowerControlRegister(chip_index);
+  if (chip >= getChipCount())
+  {
+    return false;
+  }
+  uint16_t data = readPowerControlRegister(chip);
 
   bool thermal_shutdown = data & POWER_CONTROL_THERMAL_SHUTDOWN;
   return thermal_shutdown;
@@ -204,9 +334,13 @@ bool AD57X4R::thermalShutdown(const uint8_t chip_index)
 
 bool AD57X4R::channelOverCurrent(const size_t channel)
 {
-  uint8_t chip_index = channelToChipIndex(channel);
+  if (channel >= getChannelCount())
+  {
+    return false;
+  }
+  uint8_t chip = channelToChip(channel);
   uint8_t channel_address = channelToChannelAddress(channel);
-  uint16_t data = readPowerControlRegister(chip_index);
+  uint16_t data = readPowerControlRegister(chip);
 
   bool channel_over_current = false;
   switch (channel_address)
@@ -228,10 +362,10 @@ bool AD57X4R::channelOverCurrent(const size_t channel)
 }
 
 // private
-uint8_t AD57X4R::channelToChipIndex(const size_t channel)
+uint8_t AD57X4R::channelToChip(const size_t channel)
 {
-  uint8_t chip_index = channel / CHANNEL_COUNT_PER_CHIP;
-  return chip_index;
+  uint8_t chip = channel / CHANNEL_COUNT_PER_CHIP;
+  return chip;
 }
 
 uint8_t AD57X4R::channelToChannelAddress(const size_t channel)
@@ -277,7 +411,7 @@ void AD57X4R::spiEndTransaction()
   SPI.endTransaction();
 }
 
-void AD57X4R::writeMosiDatagramToChip(const int chip_index,
+void AD57X4R::writeMosiDatagramToChip(const int chip,
                                       const AD57X4R::Datagram mosi_datagram)
 {
   spiBeginTransaction();
@@ -289,7 +423,7 @@ void AD57X4R::writeMosiDatagramToChip(const int chip_index,
   spiEndTransaction();
 }
 
-AD57X4R::Datagram AD57X4R::readMisoDatagramFromChip(const int chip_index)
+AD57X4R::Datagram AD57X4R::readMisoDatagramFromChip(const int chip)
 {
   Datagram mosi_datagram;
   mosi_datagram.uint32 = 0;
@@ -326,11 +460,11 @@ void AD57X4R::powerUpAllDacs()
   mosi_datagram.fields.reg = REGISTER_POWER_CONTROL;
   mosi_datagram.fields.channel_address = CHANNEL_ADDRESS_POWER_CONTROL;
   mosi_datagram.fields.data = data;
-  int chip_index = CHIP_INDEX_ALL;
-  writeMosiDatagramToChip(chip_index,mosi_datagram);
+  int chip = CHIP_ALL;
+  writeMosiDatagramToChip(chip,mosi_datagram);
 }
 
-void AD57X4R::setOutputRangeToChip(const int chip_index,
+void AD57X4R::setOutputRangeToChip(const int chip,
                                    const uint8_t channel_address,
                                    const Range range)
 {
@@ -338,31 +472,24 @@ void AD57X4R::setOutputRangeToChip(const int chip_index,
   switch (range)
   {
     case UNIPOLAR_5V:
-      unipolar_ = true;
       data = OUTPUT_RANGE_UNIPOLAR_5V;
       break;
     case UNIPOLAR_10V:
-      unipolar_ = true;
       data = OUTPUT_RANGE_UNIPOLAR_10V;
       break;
     case UNIPOLAR_10V8:
-      unipolar_ = true;
       data = OUTPUT_RANGE_UNIPOLAR_10V8;
       break;
     case BIPOLAR_5V:
-      unipolar_ = false;
       data = OUTPUT_RANGE_BIPOLAR_5V;
       break;
     case BIPOLAR_10V:
-      unipolar_ = false;
       data = OUTPUT_RANGE_BIPOLAR_10V;
       break;
     case BIPOLAR_10V8:
-      unipolar_ = false;
       data = OUTPUT_RANGE_BIPOLAR_10V8;
       break;
     default:
-      unipolar_ = true;
       data = OUTPUT_RANGE_UNIPOLAR_5V;
       break;
   }
@@ -372,10 +499,10 @@ void AD57X4R::setOutputRangeToChip(const int chip_index,
   mosi_datagram.fields.reg = REGISTER_OUTPUT_RANGE;
   mosi_datagram.fields.channel_address = channel_address;
   mosi_datagram.fields.data = data;
-  writeMosiDatagramToChip(chip_index,mosi_datagram);
+  writeMosiDatagramToChip(chip,mosi_datagram);
 }
 
-void AD57X4R::analogWriteToChip(const int chip_index,
+void AD57X4R::analogWriteToChip(const int chip,
                                 const uint8_t channel_address,
                                 const long data)
 {
@@ -396,29 +523,39 @@ void AD57X4R::analogWriteToChip(const int chip_index,
       mosi_datagram.fields.data = data << 4;
       break;
   }
-  writeMosiDatagramToChip(chip_index,mosi_datagram);
-  load(chip_index);
+  writeMosiDatagramToChip(chip,mosi_datagram);
+  load(chip);
 }
 
-void AD57X4R::load(const int chip_index)
+void AD57X4R::load(const int chip)
 {
   Datagram mosi_datagram;
   mosi_datagram.uint32 = 0;
   mosi_datagram.fields.rw = RW_WRITE;
   mosi_datagram.fields.reg = REGISTER_CONTROL;
   mosi_datagram.fields.channel_address = CONTROL_ADDRESS_LOAD;
-  writeMosiDatagramToChip(chip_index,mosi_datagram);
+  writeMosiDatagramToChip(chip,mosi_datagram);
 }
 
-uint16_t AD57X4R::readPowerControlRegister(const uint8_t chip_index)
+uint16_t AD57X4R::readPowerControlRegister(const uint8_t chip)
 {
   Datagram mosi_datagram;
   mosi_datagram.uint32 = 0;
   mosi_datagram.fields.rw = RW_READ;
   mosi_datagram.fields.reg = REGISTER_POWER_CONTROL;
   mosi_datagram.fields.channel_address = CHANNEL_ADDRESS_POWER_CONTROL;
-  writeMosiDatagramToChip(chip_index,mosi_datagram);
+  writeMosiDatagramToChip(chip,mosi_datagram);
 
-  Datagram miso_datagram = readMisoDatagramFromChip(chip_index);
+  Datagram miso_datagram = readMisoDatagramFromChip(chip);
   return miso_datagram.fields.data;
+}
+
+bool AD57X4R::rangeIsBipolar(const AD57X4R::Range range)
+{
+  bool range_is_bipolar = false;
+  if ((range == BIPOLAR_5V) || (range == BIPOLAR_10V) || (range == BIPOLAR_10V8))
+  {
+    range_is_bipolar = true;
+  }
+  return range_is_bipolar;
 }

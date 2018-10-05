@@ -43,16 +43,23 @@ public:
                       const Range range);
   void setOutputRangeAll(const Range range);
 
-  long getMinDacValue();
-  long getMaxDacValue();
+  long getMinDacValue(const size_t channel);
+  long getMaxDacValue(const size_t channel);
 
   void analogWrite(const size_t channel,
-                   const long value);
-  void analogWriteAll(const long value);
+                   const long dac_value);
+  void analogWriteAll(const long dac_value);
+
+  double getMinVoltageValue(const size_t channel);
+  double getMaxVoltageValue(const size_t channel);
+
+  void setVoltage(const size_t channel,
+                  const double voltage_value);
+  void setVoltageAll(const double voltage_value);
 
   bool channelPoweredUp(const size_t channel);
-  bool referencePoweredUp(const uint8_t chip_index);
-  bool thermalShutdown(const uint8_t chip_index);
+  bool referencePoweredUp(const uint8_t chip);
+  bool thermalShutdown(const uint8_t chip);
   bool channelOverCurrent(const size_t channel);
 
 private:
@@ -64,17 +71,21 @@ private:
 
   const static uint8_t CHANNEL_COUNT_PER_CHIP = 4;
 
-  const static int CHIP_INDEX_ALL = -1;
+  const static int CHIP_ALL = -1;
 
   const static size_t CHIP_COUNT_MIN = 1;
   const static size_t CHIP_COUNT_MAX = 4;
   uint8_t chip_count_;
 
+  const static size_t CHANNEL_MIN = 0;
   const static size_t CHANNEL_COUNT_MAX = CHIP_COUNT_MAX*CHANNEL_COUNT_PER_CHIP;
 
   const static uint32_t SPI_CLOCK = 8000000;
   const static uint8_t SPI_BIT_ORDER = MSBFIRST;
   const static uint8_t SPI_MODE = SPI_MODE2;
+
+  // (2^16)/(10.8*2)/2
+  const static long DOUBLE_TO_LONG_SCALE = 1517;
 
   // Datagrams
   const static uint8_t DATAGRAM_SIZE = 3;
@@ -137,25 +148,26 @@ private:
   const static uint8_t OUTPUT_RANGE_BIPOLAR_10V = 0b100;
   const static uint8_t OUTPUT_RANGE_BIPOLAR_10V8 = 0b101;
 
-  bool unipolar_array_[CHANNEL_COUNT_MAX];
+  Range range_[CHANNEL_COUNT_MAX];
 
-  uint8_t channelToChipIndex(const size_t channel);
+  uint8_t channelToChip(const size_t channel);
   uint8_t channelToChannelAddress(const size_t channel);
   void csEnable();
   void csDisable();
   void spiBeginTransaction();
   void spiEndTransaction();
-  void writeMosiDatagramToChip(const int chip_index,
+  void writeMosiDatagramToChip(const int chip,
                                const Datagram mosi_datagram);
-  Datagram readMisoDatagramFromChip(const int chip_index);
+  Datagram readMisoDatagramFromChip(const int chip);
   void powerUpAllDacs();
-  void setOutputRangeToChip(const int chip_index,
+  void setOutputRangeToChip(const int chip,
                             const uint8_t channel_address,
                             const Range range);
-  void analogWriteToChip(const int chip_index,
+  void analogWriteToChip(const int chip,
                          const uint8_t channel_address,
                          const long data);
-  void load(const int chip_index);
-  uint16_t readPowerControlRegister(const uint8_t chip_index);
+  void load(const int chip);
+  uint16_t readPowerControlRegister(const uint8_t chip);
+  bool rangeIsBipolar(const Range range);
 };
 #endif
