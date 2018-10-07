@@ -57,6 +57,11 @@ public:
                   const double voltage_value);
   void setVoltageAll(const double voltage_value);
 
+  double dacValueToVoltageValue(const size_t channel,
+                                const long dac_value);
+  long voltageValueToDacValue(const size_t channel,
+                              const double voltage_value);
+
   bool channelPoweredUp(const size_t channel);
   bool referencePoweredUp(const uint8_t chip);
   bool thermalShutdown(const uint8_t chip);

@@ -279,6 +279,26 @@ void AD57X4R::setVoltageAll(const double voltage_value)
   }
 }
 
+double AD57X4R::dacValueToVoltageValue(const size_t channel,
+                                       const long dac_value)
+{
+  double voltage_value = 0;
+  size_t channel_constrained = constrain(channel,
+                                         CHANNEL_MIN,
+                                         getChannelCount()-1);
+  return voltage_value;
+}
+
+long AD57X4R::voltageValueToDacValue(const size_t channel,
+                                     const double voltage_value)
+{
+  long dac_value;
+  size_t channel_constrained = constrain(channel,
+                                         CHANNEL_MIN,
+                                         getChannelCount()-1);
+  return dac_value;
+}
+
 bool AD57X4R::channelPoweredUp(const size_t channel)
 {
   if (channel >= getChannelCount())

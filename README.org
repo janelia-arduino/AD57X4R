@@ -4,7 +4,7 @@
 
 * Library Information
   - Author :: Peter Polidoro
-  - Version :: 2.0.0
+  - Version :: 2.1.0
   - License :: BSD
   - URL :: https://github.com/janelia-arduino/AD57X4R
   - Author :: Peter Polidoro
