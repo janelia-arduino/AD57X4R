@@ -68,7 +68,7 @@ public:
   bool channelOverCurrent(const size_t channel);
 
   void beginSimultaneousUpdate();
-  void endSimultaneousUpdate();
+  void simultaneousUpdate();
 
 private:
   size_t cs_pin_;

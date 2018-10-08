@@ -409,7 +409,7 @@ void AD57X4R::beginSimultaneousUpdate()
   }
 }
 
-void AD57X4R::endSimultaneousUpdate()
+void AD57X4R::simultaneousUpdate()
 {
   if (simultaneous_update_enabled_)
   {

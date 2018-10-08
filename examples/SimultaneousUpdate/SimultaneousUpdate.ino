@@ -32,7 +32,7 @@ void loop()
     dac.analogWrite(DAC_CHANNEL_0,dac.getMinDacValue(DAC_CHANNEL_0));
     delay(LOOP_DELAY/2);
     dac.analogWrite(DAC_CHANNEL_1,dac.getMinDacValue(DAC_CHANNEL_1));
-    dac.endSimultaneousUpdate();
+    dac.simultaneousUpdate();
     delay(LOOP_DELAY/2);
   }
   else
