@@ -59,7 +59,7 @@ void AD57X4R::setup(const Resolution resolution,
   SPI.begin();
   powerUpAllDacs();
   setOutputRangeAll(UNIPOLAR_5V);
-  analogWriteAll(0);
+  setDacValueAll(0);
 }
 
 uint8_t AD57X4R::getChipCount()
@@ -160,7 +160,8 @@ long AD57X4R::getMaxDacValue(const size_t channel)
   return max_dac_value;
 }
 
-void AD57X4R::analogWrite(const size_t channel, const long dac_value)
+void AD57X4R::setDacValue(const size_t channel,
+                          const long dac_value)
 {
   size_t channel_constrained = constrain(channel,
                                          CHANNEL_MIN,
@@ -170,86 +171,93 @@ void AD57X4R::analogWrite(const size_t channel, const long dac_value)
                                          getMaxDacValue(channel_constrained));
   uint8_t chip = channelToChip(channel_constrained);
   uint8_t channel_address = channelToChannelAddress(channel_constrained);
-  analogWriteToChip(chip,channel_address,dac_value_constrained);
+  setDacValueToChip(chip,channel_address,dac_value_constrained);
 }
 
-void AD57X4R::analogWriteAll(const long dac_value)
+void AD57X4R::setDacValueAll(const long dac_value)
 {
   for (size_t channel=0; channel<getChannelCount(); ++channel)
   {
-    analogWrite(channel,dac_value);
+    setDacValue(channel,dac_value);
   }
 }
 
-double AD57X4R::getMinVoltageValue(const size_t channel)
+void AD57X4R::analogWrite(const size_t channel,
+                          const long dac_value)
 {
-  double min_voltage_value = 0.0;
+  setDacValue(channel,dac_value);
+}
+
+double AD57X4R::getMinVoltage(const size_t channel)
+{
+  double min_voltage = 0.0;
   if (channel >= getChannelCount())
   {
-    return min_voltage_value;
+    return min_voltage;
   }
   switch (range_[channel])
   {
     case UNIPOLAR_5V:
-      min_voltage_value = 0.0;
+      min_voltage = 0.0;
       break;
     case UNIPOLAR_10V:
-      min_voltage_value = 0.0;
+      min_voltage = 0.0;
       break;
     case UNIPOLAR_10V8:
-      min_voltage_value = 0.0;
+      min_voltage = 0.0;
       break;
     case BIPOLAR_5V:
-      min_voltage_value = -5.0;
+      min_voltage = -5.0;
       break;
     case BIPOLAR_10V:
-      min_voltage_value = -10.0;
+      min_voltage = -10.0;
       break;
     case BIPOLAR_10V8:
-      min_voltage_value = -10.8;
+      min_voltage = -10.8;
       break;
     default:
-      min_voltage_value = 0.0;
+      min_voltage = 0.0;
       break;
   }
-  return min_voltage_value;
+  return min_voltage;
 }
 
-double AD57X4R::getMaxVoltageValue(const size_t channel)
+double AD57X4R::getMaxVoltage(const size_t channel)
 {
-  double max_voltage_value = 0.0;
+  double max_voltage = 0.0;
   if (channel >= getChannelCount())
   {
-    return max_voltage_value;
+    return max_voltage;
   }
   switch (range_[channel])
   {
     case UNIPOLAR_5V:
-      max_voltage_value = 5.0;
+      max_voltage = 5.0;
       break;
     case UNIPOLAR_10V:
-      max_voltage_value = 10.0;
+      max_voltage = 10.0;
       break;
     case UNIPOLAR_10V8:
-      max_voltage_value = 10.8;
+      max_voltage = 10.8;
       break;
     case BIPOLAR_5V:
-      max_voltage_value = 5.0;
+      max_voltage = 5.0;
       break;
     case BIPOLAR_10V:
-      max_voltage_value = 10.0;
+      max_voltage = 10.0;
       break;
     case BIPOLAR_10V8:
-      max_voltage_value = 10.8;
+      max_voltage = 10.8;
       break;
     default:
-      max_voltage_value = 0.0;
+      max_voltage = 0.0;
       break;
   }
-  return max_voltage_value;
+  return max_voltage;
 }
 
-void AD57X4R::setVoltage(const size_t channel, const double voltage_value)
+void AD57X4R::setVoltage(const size_t channel,
+                         const double voltage)
 {
   // Wastes resolution, need to change algorithm
   size_t channel_constrained = constrain(channel,
@@ -257,22 +265,22 @@ void AD57X4R::setVoltage(const size_t channel, const double voltage_value)
                                          getChannelCount()-1);
   uint8_t chip = channelToChip(channel_constrained);
   uint8_t channel_address = channelToChannelAddress(channel_constrained);
-  long dac_value = voltageValueToDacValue(channel,voltage_value);
-  analogWriteToChip(chip,channel_address,dac_value);
+  long dac_value = voltageValueToDacValue(channel,voltage);
+  setDacValueToChip(chip,channel_address,dac_value);
 }
 
-void AD57X4R::setVoltageAll(const double voltage_value)
+void AD57X4R::setVoltageAll(const double voltage)
 {
   for (size_t channel=0; channel<getChannelCount(); ++channel)
   {
-    setVoltage(channel,voltage_value);
+    setVoltage(channel,voltage);
   }
 }
 
-double AD57X4R::dacValueToVoltageValue(const size_t channel,
-                                       const long dac_value)
+double AD57X4R::dacValueToVoltage(const size_t channel,
+                                  const long dac_value)
 {
-  double voltage_value = 0.0;
+  double voltage = 0.0;
   size_t channel_constrained = constrain(channel,
                                          CHANNEL_MIN,
                                          getChannelCount()-1);
@@ -283,38 +291,38 @@ double AD57X4R::dacValueToVoltageValue(const size_t channel,
                                          max_dac_value);
   if ((dac_value_constrained < 0) && rangeIsBipolar(range_[channel_constrained]))
   {
-    double min_voltage_value = getMinVoltageValue(channel_constrained);
-    voltage_value = (dac_value_constrained*min_voltage_value)/min_dac_value;
+    double min_voltage = getMinVoltage(channel_constrained);
+    voltage = (dac_value_constrained*min_voltage)/min_dac_value;
   }
   else
   {
-    double max_voltage_value = getMaxVoltageValue(channel_constrained);
-    voltage_value = (dac_value_constrained*max_voltage_value)/max_dac_value;
+    double max_voltage = getMaxVoltage(channel_constrained);
+    voltage = (dac_value_constrained*max_voltage)/max_dac_value;
   }
-  return voltage_value;
+  return voltage;
 }
 
 long AD57X4R::voltageValueToDacValue(const size_t channel,
-                                     const double voltage_value)
+                                     const double voltage)
 {
   long dac_value = 0;
   size_t channel_constrained = constrain(channel,
                                          CHANNEL_MIN,
                                          getChannelCount()-1);
-  double min_voltage_value = getMinVoltageValue(channel_constrained);
-  double max_voltage_value = getMaxVoltageValue(channel_constrained);
-  double voltage_value_constrained = constrain(voltage_value,
-                                               min_voltage_value,
-                                               max_voltage_value);
-  if ((voltage_value_constrained < 0) && rangeIsBipolar(range_[channel_constrained]))
+  double min_voltage = getMinVoltage(channel_constrained);
+  double max_voltage = getMaxVoltage(channel_constrained);
+  double voltage_constrained = constrain(voltage,
+                                         min_voltage,
+                                         max_voltage);
+  if ((voltage_constrained < 0) && rangeIsBipolar(range_[channel_constrained]))
   {
     long min_dac_value = getMinDacValue(channel_constrained);
-    dac_value = (voltage_value_constrained*min_dac_value)/min_voltage_value;
+    dac_value = (voltage_constrained*min_dac_value)/min_voltage;
   }
   else
   {
     long max_dac_value = getMaxDacValue(channel_constrained);
-    dac_value = (voltage_value_constrained*max_dac_value)/max_voltage_value;
+    dac_value = (voltage_constrained*max_dac_value)/max_voltage;
   }
   return dac_value;
 }
@@ -563,7 +571,7 @@ void AD57X4R::setOutputRangeToChip(const int chip,
   writeMosiDatagramToChip(chip,mosi_datagram);
 }
 
-void AD57X4R::analogWriteToChip(const int chip,
+void AD57X4R::setDacValueToChip(const int chip,
                                 const uint8_t channel_address,
                                 const long data)
 {

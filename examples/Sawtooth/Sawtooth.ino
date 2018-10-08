@@ -22,7 +22,6 @@ void setup()
   dac.setOutputRange(DAC_CHANNEL,AD57X4R::UNIPOLAR_5V);
 }
 
-
 void loop()
 {
   dac_value += DAC_VALUE_INC;

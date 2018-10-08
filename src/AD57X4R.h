@@ -46,21 +46,23 @@ public:
   long getMinDacValue(const size_t channel);
   long getMaxDacValue(const size_t channel);
 
+  void setDacValue(const size_t channel,
+                   const long dac_value);
+  void setDacValueAll(const long dac_value);
   void analogWrite(const size_t channel,
                    const long dac_value);
-  void analogWriteAll(const long dac_value);
 
-  double getMinVoltageValue(const size_t channel);
-  double getMaxVoltageValue(const size_t channel);
+  double getMinVoltage(const size_t channel);
+  double getMaxVoltage(const size_t channel);
 
   void setVoltage(const size_t channel,
-                  const double voltage_value);
-  void setVoltageAll(const double voltage_value);
+                  const double voltage);
+  void setVoltageAll(const double voltage);
 
-  double dacValueToVoltageValue(const size_t channel,
-                                const long dac_value);
+  double dacValueToVoltage(const size_t channel,
+                           const long dac_value);
   long voltageValueToDacValue(const size_t channel,
-                              const double voltage_value);
+                              const double voltage);
 
   bool channelPoweredUp(const size_t channel);
   bool referencePoweredUp(const uint8_t chip);
@@ -170,7 +172,7 @@ private:
   void setOutputRangeToChip(const int chip,
                             const uint8_t channel_address,
                             const Range range);
-  void analogWriteToChip(const int chip,
+  void setDacValueToChip(const int chip,
                          const uint8_t channel_address,
                          const long data);
   void load(const int chip);
