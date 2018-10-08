@@ -29,17 +29,17 @@ void loop()
   if (is_min_value)
   {
     dac.beginSimultaneousUpdate();
-    dac.setDacValue(DAC_CHANNEL_0,dac.getMinDacValue(DAC_CHANNEL_0));
+    dac.setDacValue(DAC_CHANNEL_0,dac.getDacValueMin(DAC_CHANNEL_0));
     delay(LOOP_DELAY/2);
-    dac.setDacValue(DAC_CHANNEL_1,dac.getMinDacValue(DAC_CHANNEL_1));
+    dac.setDacValue(DAC_CHANNEL_1,dac.getDacValueMin(DAC_CHANNEL_1));
     dac.simultaneousUpdate();
     delay(LOOP_DELAY/2);
   }
   else
   {
-    dac.setDacValue(DAC_CHANNEL_0,dac.getMaxDacValue(DAC_CHANNEL_0));
+    dac.setDacValue(DAC_CHANNEL_0,dac.getDacValueMax(DAC_CHANNEL_0));
     delay(LOOP_DELAY/2);
-    dac.setDacValue(DAC_CHANNEL_1,dac.getMaxDacValue(DAC_CHANNEL_1));
+    dac.setDacValue(DAC_CHANNEL_1,dac.getDacValueMax(DAC_CHANNEL_1));
     delay(LOOP_DELAY/2);
   }
   is_min_value = !is_min_value;

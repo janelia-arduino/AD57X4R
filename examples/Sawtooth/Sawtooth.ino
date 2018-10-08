@@ -25,9 +25,9 @@ void setup()
 void loop()
 {
   dac_value += DAC_VALUE_INC;
-  if (dac_value > dac.getMaxDacValue(DAC_CHANNEL))
+  if (dac_value > dac.getDacValueMax(DAC_CHANNEL))
   {
-    dac_value = dac.getMinDacValue(DAC_CHANNEL);
+    dac_value = dac.getDacValueMin(DAC_CHANNEL);
   }
   dac.analogWrite(DAC_CHANNEL,dac_value);
   delay(LOOP_DELAY);

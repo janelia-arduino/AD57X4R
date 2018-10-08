@@ -79,7 +79,7 @@ void loop()
         size_t channel = atoi(argv[1]);
         double voltage = atof(argv[2]);
         dac.setVoltage(channel,voltage);
-        long dac_value = dac.voltageValueToDacValue(channel,voltage);
+        long dac_value = dac.voltageToDacValue(channel,voltage);
         Serial << "setVoltage CHANNEL: " << channel << ", VOLTAGE: " << voltage << ", DAC_VALUE: " << dac_value << "\n";
       }
       else
