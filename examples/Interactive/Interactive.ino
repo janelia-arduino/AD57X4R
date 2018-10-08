@@ -10,6 +10,8 @@ const long BAUD = 115200;
 const size_t CHANNEL_COUNT = 4;
 const double VOLTAGE_MIN = -10.8;
 const double VOLTAGE_MAX = 10.8;
+const long DAC_MIN = -32768;
+const long DAC_MAX = 65536;
 
 AD57X4R dac = AD57X4R(CHIP_SELECT_PIN);
 
@@ -78,7 +80,8 @@ void loop()
         size_t channel = atoi(argv[1]);
         double voltage_value = atof(argv[2]);
         dac.setVoltage(channel,voltage_value);
-        Serial << "setVoltage CHANNEL: " << channel << ", VOLTAGE_VALUE: " << voltage_value << "\n";
+        long dac_value = dac.voltageValueToDacValue(channel,voltage_value);
+        Serial << "setVoltage CHANNEL: " << channel << ", VOLTAGE_VALUE: " << voltage_value << ", DAC_VALUE: " << dac_value << "\n";
       }
       else
       {
@@ -92,7 +95,8 @@ void loop()
         size_t channel = atoi(argv[1]);
         long dac_value = atoi(argv[2]);
         dac.analogWrite(channel,dac_value);
-        Serial << "analogWrite CHANNEL: " << channel << ", DAC_VALUE: " << dac_value << "\n";
+        double voltage_value = dac.dacValueToVoltageValue(channel,dac_value);
+        Serial << "analogWrite CHANNEL: " << channel << ", DAC_VALUE: " << dac_value << ", VOLTAGE_VALUE: " << voltage_value << "\n";
       }
       else
       {

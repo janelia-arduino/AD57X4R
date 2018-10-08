@@ -67,9 +67,13 @@ public:
   bool thermalShutdown(const uint8_t chip);
   bool channelOverCurrent(const size_t channel);
 
+  void beginSimultaneousUpdate();
+  void endSimultaneousUpdate();
+
 private:
   size_t cs_pin_;
   size_t ldac_pin_;
+  bool simultaneous_load_enabled_;
   size_t clr_pin_;
 
   int resolution_;
@@ -88,9 +92,6 @@ private:
   const static uint32_t SPI_CLOCK = 8000000;
   const static uint8_t SPI_BIT_ORDER = MSBFIRST;
   const static uint8_t SPI_MODE = SPI_MODE2;
-
-  // (2^16)/(10.8*2)/2
-  const static long DOUBLE_TO_LONG_SCALE = 1517;
 
   // Datagrams
   const static uint8_t DATAGRAM_SIZE = 3;
@@ -155,6 +156,7 @@ private:
 
   Range range_[CHANNEL_COUNT_MAX];
 
+  void initialize();
   uint8_t channelToChip(const size_t channel);
   uint8_t channelToChannelAddress(const size_t channel);
   void csEnable();
