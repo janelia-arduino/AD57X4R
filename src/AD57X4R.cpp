@@ -34,7 +34,7 @@ void AD57X4R::setLoadDacPin(const size_t pin)
   pinMode(pin,OUTPUT);
   digitalWrite(pin,LOW);
   ldac_pin_ = pin;
-  simultaneous_load_enabled_ = true;
+  simultaneous_update_enabled_ = true;
 }
 
 void AD57X4R::setClearPin(const size_t pin)
@@ -59,6 +59,7 @@ void AD57X4R::setup(const Resolution resolution,
   SPI.begin();
   powerUpAllDacs();
   setOutputRangeAll(UNIPOLAR_5V);
+  analogWriteAll(0);
 }
 
 uint8_t AD57X4R::getChipCount()
@@ -152,7 +153,7 @@ long AD57X4R::getMaxDacValue(const size_t channel)
         max_dac_value = 16383;
         break;
       case AD5754R:
-        max_dac_value = 65536;
+        max_dac_value = 65535;
         break;
     }
   }
@@ -402,7 +403,7 @@ bool AD57X4R::channelOverCurrent(const size_t channel)
 
 void AD57X4R::beginSimultaneousUpdate()
 {
-  if (simultaneous_load_enabled_)
+  if (simultaneous_update_enabled_)
   {
     digitalWrite(ldac_pin_,HIGH);
   }
@@ -410,7 +411,7 @@ void AD57X4R::beginSimultaneousUpdate()
 
 void AD57X4R::endSimultaneousUpdate()
 {
-  if (simultaneous_load_enabled_)
+  if (simultaneous_update_enabled_)
   {
     digitalWrite(ldac_pin_,LOW);
   }
@@ -419,7 +420,7 @@ void AD57X4R::endSimultaneousUpdate()
 // private
 void AD57X4R::initialize()
 {
-  simultaneous_load_enabled_ = false;
+  simultaneous_update_enabled_ = false;
 }
 
 uint8_t AD57X4R::channelToChip(const size_t channel)

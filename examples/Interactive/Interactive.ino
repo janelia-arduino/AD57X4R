@@ -62,7 +62,7 @@ void setup()
   channel = 1;
   dac.setOutputRange(channel,AD57X4R::UNIPOLAR_10V);
   channel = 2;
-  dac.setOutputRange(channel,AD57X4R::BIPOLAR_5V);
+  dac.setOutputRange(channel,AD57X4R::UNIPOLAR_5V);
   channel = 3;
   dac.setOutputRange(channel,AD57X4R::BIPOLAR_10V8);
 }

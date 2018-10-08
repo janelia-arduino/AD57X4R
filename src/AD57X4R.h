@@ -73,7 +73,7 @@ public:
 private:
   size_t cs_pin_;
   size_t ldac_pin_;
-  bool simultaneous_load_enabled_;
+  bool simultaneous_update_enabled_;
   size_t clr_pin_;
 
   int resolution_;
