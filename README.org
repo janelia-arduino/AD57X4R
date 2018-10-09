@@ -3,8 +3,8 @@
 #+EMAIL: peterpolidoro@gmail.com
 
 * Library Information
-  - Author :: Peter Polidoro
-  - Version :: 3.0.0
+  - Name :: AD57X4R
+  - Version :: 3.0.1
   - License :: BSD
   - URL :: https://github.com/janelia-arduino/AD57X4R
   - Author :: Peter Polidoro

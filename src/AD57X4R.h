@@ -73,7 +73,7 @@ public:
   void simultaneousUpdate();
 
 private:
-  size_t cs_pin_;
+  size_t chip_select_pin_;
   size_t ldac_pin_;
   bool simultaneous_update_enabled_;
   size_t clr_pin_;
@@ -161,8 +161,8 @@ private:
   void initialize();
   uint8_t channelToChip(const size_t channel);
   uint8_t channelToChannelAddress(const size_t channel);
-  void csEnable();
-  void csDisable();
+  void enableClockSelect();
+  void disableClockSelect();
   void spiBeginTransaction();
   void spiEndTransaction();
   void writeMosiDatagramToChip(const int chip,

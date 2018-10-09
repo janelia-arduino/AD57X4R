@@ -26,7 +26,7 @@ void AD57X4R::setChipSelectPin(const size_t pin)
 {
   pinMode(pin,OUTPUT);
   digitalWrite(pin,HIGH);
-  cs_pin_ = pin;
+  chip_select_pin_ = pin;
 }
 
 void AD57X4R::setLoadDacPin(const size_t pin)
@@ -459,24 +459,24 @@ uint8_t AD57X4R::channelToChannelAddress(const size_t channel)
   return channel_address;
 }
 
-void AD57X4R::csEnable()
+void AD57X4R::enableClockSelect()
 {
-  digitalWrite(cs_pin_,LOW);
+  digitalWrite(chip_select_pin_,LOW);
 }
 
-void AD57X4R::csDisable()
+void AD57X4R::disableClockSelect()
 {
-  digitalWrite(cs_pin_,HIGH);
+  digitalWrite(chip_select_pin_,HIGH);
 }
 void AD57X4R::spiBeginTransaction()
 {
   SPI.beginTransaction(SPISettings(SPI_CLOCK,SPI_BIT_ORDER,SPI_MODE));
-  csEnable();
+  enableClockSelect();
 }
 
 void AD57X4R::spiEndTransaction()
 {
-  csDisable();
+  disableClockSelect();
   SPI.endTransaction();
 }
 
