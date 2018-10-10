@@ -16,20 +16,20 @@ AD57X4R::AD57X4R()
   initialize();
 }
 
-AD57X4R::AD57X4R(const size_t chip_select_pin)
+AD57X4R::AD57X4R(size_t chip_select_pin)
 {
   initialize();
   setChipSelectPin(chip_select_pin);
 }
 
-void AD57X4R::setChipSelectPin(const size_t pin)
+void AD57X4R::setChipSelectPin(size_t pin)
 {
   pinMode(pin,OUTPUT);
   digitalWrite(pin,HIGH);
   chip_select_pin_ = pin;
 }
 
-void AD57X4R::setLoadDacPin(const size_t pin)
+void AD57X4R::setLoadDacPin(size_t pin)
 {
   pinMode(pin,OUTPUT);
   digitalWrite(pin,LOW);
@@ -37,15 +37,15 @@ void AD57X4R::setLoadDacPin(const size_t pin)
   simultaneous_update_enabled_ = true;
 }
 
-void AD57X4R::setClearPin(const size_t pin)
+void AD57X4R::setClearPin(size_t pin)
 {
   pinMode(pin,OUTPUT);
   digitalWrite(pin,HIGH);
   clr_pin_ = pin;
 }
 
-void AD57X4R::setup(const Resolution resolution,
-                    const uint8_t chip_count)
+void AD57X4R::setup(Resolution resolution,
+                    uint8_t chip_count)
 {
   if ((chip_count >= CHIP_COUNT_MIN) && (chip_count <= CHIP_COUNT_MAX))
   {
@@ -72,8 +72,8 @@ size_t AD57X4R::getChannelCount()
   return chip_count_*CHANNEL_COUNT_PER_CHIP;
 }
 
-void AD57X4R::setOutputRange(const size_t channel,
-                             const Range range)
+void AD57X4R::setOutputRange(size_t channel,
+                             Range range)
 {
   size_t channel_constrained = constrain(channel,
                                          CHANNEL_MIN,
@@ -84,7 +84,7 @@ void AD57X4R::setOutputRange(const size_t channel,
   setOutputRangeToChip(chip,channel_address,range);
 }
 
-void AD57X4R::setAllOutputRanges(const Range range)
+void AD57X4R::setAllOutputRanges(Range range)
 {
   uint8_t chip = CHIP_ALL;
   uint8_t channel_address = CHANNEL_ADDRESS_ALL;
@@ -95,7 +95,7 @@ void AD57X4R::setAllOutputRanges(const Range range)
   setOutputRangeToChip(chip,channel_address,range);
 }
 
-long AD57X4R::getDacValueMin(const size_t channel)
+long AD57X4R::getDacValueMin(size_t channel)
 {
   long dac_value_min = 0;
   if (channel >= getChannelCount())
@@ -120,7 +120,7 @@ long AD57X4R::getDacValueMin(const size_t channel)
   return dac_value_min;
 }
 
-long AD57X4R::getDacValueMax(const size_t channel)
+long AD57X4R::getDacValueMax(size_t channel)
 {
   long dac_value_max = 0;
   if (channel >= getChannelCount())
@@ -160,8 +160,8 @@ long AD57X4R::getDacValueMax(const size_t channel)
   return dac_value_max;
 }
 
-void AD57X4R::setDacValue(const size_t channel,
-                          const long dac_value)
+void AD57X4R::setDacValue(size_t channel,
+                          long dac_value)
 {
   size_t channel_constrained = constrain(channel,
                                          CHANNEL_MIN,
@@ -174,7 +174,7 @@ void AD57X4R::setDacValue(const size_t channel,
   setDacValueToChip(chip,channel_address,dac_value_constrained);
 }
 
-void AD57X4R::setAllDacValues(const long dac_value)
+void AD57X4R::setAllDacValues(long dac_value)
 {
   for (size_t channel=0; channel<getChannelCount(); ++channel)
   {
@@ -182,13 +182,13 @@ void AD57X4R::setAllDacValues(const long dac_value)
   }
 }
 
-void AD57X4R::analogWrite(const size_t channel,
-                          const long dac_value)
+void AD57X4R::analogWrite(size_t channel,
+                          long dac_value)
 {
   setDacValue(channel,dac_value);
 }
 
-double AD57X4R::getVoltageMin(const size_t channel)
+double AD57X4R::getVoltageMin(size_t channel)
 {
   double voltage_min = 0.0;
   if (channel >= getChannelCount())
@@ -222,7 +222,7 @@ double AD57X4R::getVoltageMin(const size_t channel)
   return voltage_min;
 }
 
-double AD57X4R::getVoltageMax(const size_t channel)
+double AD57X4R::getVoltageMax(size_t channel)
 {
   double voltage_max = 0.0;
   if (channel >= getChannelCount())
@@ -256,8 +256,8 @@ double AD57X4R::getVoltageMax(const size_t channel)
   return voltage_max;
 }
 
-void AD57X4R::setVoltage(const size_t channel,
-                         const double voltage)
+void AD57X4R::setVoltage(size_t channel,
+                         double voltage)
 {
   // Wastes resolution, need to change algorithm
   size_t channel_constrained = constrain(channel,
@@ -269,7 +269,7 @@ void AD57X4R::setVoltage(const size_t channel,
   setDacValueToChip(chip,channel_address,dac_value);
 }
 
-void AD57X4R::setAllVoltages(const double voltage)
+void AD57X4R::setAllVoltages(double voltage)
 {
   for (size_t channel=0; channel<getChannelCount(); ++channel)
   {
@@ -277,8 +277,8 @@ void AD57X4R::setAllVoltages(const double voltage)
   }
 }
 
-double AD57X4R::dacValueToVoltage(const size_t channel,
-                                  const long dac_value)
+double AD57X4R::dacValueToVoltage(size_t channel,
+                                  long dac_value)
 {
   double voltage = 0.0;
   size_t channel_constrained = constrain(channel,
@@ -302,8 +302,8 @@ double AD57X4R::dacValueToVoltage(const size_t channel,
   return voltage;
 }
 
-long AD57X4R::voltageToDacValue(const size_t channel,
-                                const double voltage)
+long AD57X4R::voltageToDacValue(size_t channel,
+                                double voltage)
 {
   long dac_value = 0;
   size_t channel_constrained = constrain(channel,
@@ -327,7 +327,7 @@ long AD57X4R::voltageToDacValue(const size_t channel,
   return dac_value;
 }
 
-bool AD57X4R::channelPoweredUp(const size_t channel)
+bool AD57X4R::channelPoweredUp(size_t channel)
 {
   if (channel >= getChannelCount())
   {
@@ -356,7 +356,7 @@ bool AD57X4R::channelPoweredUp(const size_t channel)
   return channel_powered_up;
 }
 
-bool AD57X4R::referencePoweredUp(const uint8_t chip)
+bool AD57X4R::referencePoweredUp(uint8_t chip)
 {
   if (chip >= getChipCount())
   {
@@ -368,7 +368,7 @@ bool AD57X4R::referencePoweredUp(const uint8_t chip)
   return reference_powered_up;
 }
 
-bool AD57X4R::thermalShutdown(const uint8_t chip)
+bool AD57X4R::thermalShutdown(uint8_t chip)
 {
   if (chip >= getChipCount())
   {
@@ -380,7 +380,7 @@ bool AD57X4R::thermalShutdown(const uint8_t chip)
   return thermal_shutdown;
 }
 
-bool AD57X4R::channelOverCurrent(const size_t channel)
+bool AD57X4R::channelOverCurrent(size_t channel)
 {
   if (channel >= getChannelCount())
   {
@@ -431,13 +431,13 @@ void AD57X4R::initialize()
   simultaneous_update_enabled_ = false;
 }
 
-uint8_t AD57X4R::channelToChip(const size_t channel)
+uint8_t AD57X4R::channelToChip(size_t channel)
 {
   uint8_t chip = channel / CHANNEL_COUNT_PER_CHIP;
   return chip;
 }
 
-uint8_t AD57X4R::channelToChannelAddress(const size_t channel)
+uint8_t AD57X4R::channelToChannelAddress(size_t channel)
 {
   uint8_t chip_channel = channel % CHANNEL_COUNT_PER_CHIP;
   uint8_t channel_address;
@@ -480,8 +480,8 @@ void AD57X4R::spiEndTransaction()
   SPI.endTransaction();
 }
 
-void AD57X4R::writeMosiDatagramToChip(const int chip,
-                                      const AD57X4R::Datagram mosi_datagram)
+void AD57X4R::writeMosiDatagramToChip(int chip,
+                                      AD57X4R::Datagram mosi_datagram)
 {
   spiBeginTransaction();
   for (int i=(DATAGRAM_SIZE - 1); i>=0; --i)
@@ -492,7 +492,7 @@ void AD57X4R::writeMosiDatagramToChip(const int chip,
   spiEndTransaction();
 }
 
-AD57X4R::Datagram AD57X4R::readMisoDatagramFromChip(const int chip)
+AD57X4R::Datagram AD57X4R::readMisoDatagramFromChip(int chip)
 {
   Datagram mosi_datagram;
   mosi_datagram.uint32 = 0;
@@ -533,9 +533,9 @@ void AD57X4R::powerUpAllDacs()
   writeMosiDatagramToChip(chip,mosi_datagram);
 }
 
-void AD57X4R::setOutputRangeToChip(const int chip,
-                                   const uint8_t channel_address,
-                                   const Range range)
+void AD57X4R::setOutputRangeToChip(int chip,
+                                   uint8_t channel_address,
+                                   Range range)
 {
   uint16_t data;
   switch (range)
@@ -571,9 +571,9 @@ void AD57X4R::setOutputRangeToChip(const int chip,
   writeMosiDatagramToChip(chip,mosi_datagram);
 }
 
-void AD57X4R::setDacValueToChip(const int chip,
-                                const uint8_t channel_address,
-                                const long data)
+void AD57X4R::setDacValueToChip(int chip,
+                                uint8_t channel_address,
+                                long data)
 {
   Datagram mosi_datagram;
   mosi_datagram.uint32 = 0;
@@ -595,7 +595,7 @@ void AD57X4R::setDacValueToChip(const int chip,
   writeMosiDatagramToChip(chip,mosi_datagram);
 }
 
-void AD57X4R::load(const int chip)
+void AD57X4R::load(int chip)
 {
   Datagram mosi_datagram;
   mosi_datagram.uint32 = 0;
@@ -605,7 +605,7 @@ void AD57X4R::load(const int chip)
   writeMosiDatagramToChip(chip,mosi_datagram);
 }
 
-uint16_t AD57X4R::readPowerControlRegister(const uint8_t chip)
+uint16_t AD57X4R::readPowerControlRegister(uint8_t chip)
 {
   Datagram mosi_datagram;
   mosi_datagram.uint32 = 0;
@@ -618,7 +618,7 @@ uint16_t AD57X4R::readPowerControlRegister(const uint8_t chip)
   return miso_datagram.fields.data;
 }
 
-bool AD57X4R::rangeIsBipolar(const AD57X4R::Range range)
+bool AD57X4R::rangeIsBipolar(AD57X4R::Range range)
 {
   bool range_is_bipolar = false;
   if ((range == BIPOLAR_5V) || (range == BIPOLAR_10V) || (range == BIPOLAR_10V8))

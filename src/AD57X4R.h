@@ -27,47 +27,47 @@ public:
               BIPOLAR_10V8};
 
   AD57X4R();
-  AD57X4R(const size_t chip_select_pin);
+  AD57X4R(size_t chip_select_pin);
 
-  void setChipSelectPin(const size_t pin);
-  void setLoadDacPin(const size_t pin);
-  void setClearPin(const size_t pin);
+  void setChipSelectPin(size_t pin);
+  void setLoadDacPin(size_t pin);
+  void setClearPin(size_t pin);
 
-  void setup(const Resolution resolution=AD5754R,
-             const uint8_t chip_count=1);
+  void setup(Resolution resolution=AD5754R,
+             uint8_t chip_count=1);
 
   uint8_t getChipCount();
   size_t getChannelCount();
 
-  void setOutputRange(const size_t channel,
-                      const Range range);
-  void setAllOutputRanges(const Range range);
+  void setOutputRange(size_t channel,
+                      Range range);
+  void setAllOutputRanges(Range range);
 
-  long getDacValueMin(const size_t channel);
-  long getDacValueMax(const size_t channel);
+  long getDacValueMin(size_t channel);
+  long getDacValueMax(size_t channel);
 
-  void setDacValue(const size_t channel,
-                   const long dac_value);
-  void setAllDacValues(const long dac_value);
-  void analogWrite(const size_t channel,
-                   const long dac_value);
+  void setDacValue(size_t channel,
+                   long dac_value);
+  void setAllDacValues(long dac_value);
+  void analogWrite(size_t channel,
+                   long dac_value);
 
-  double getVoltageMin(const size_t channel);
-  double getVoltageMax(const size_t channel);
+  double getVoltageMin(size_t channel);
+  double getVoltageMax(size_t channel);
 
-  void setVoltage(const size_t channel,
-                  const double voltage);
-  void setAllVoltages(const double voltage);
+  void setVoltage(size_t channel,
+                  double voltage);
+  void setAllVoltages(double voltage);
 
-  double dacValueToVoltage(const size_t channel,
-                           const long dac_value);
-  long voltageToDacValue(const size_t channel,
-                         const double voltage);
+  double dacValueToVoltage(size_t channel,
+                           long dac_value);
+  long voltageToDacValue(size_t channel,
+                         double voltage);
 
-  bool channelPoweredUp(const size_t channel);
-  bool referencePoweredUp(const uint8_t chip);
-  bool thermalShutdown(const uint8_t chip);
-  bool channelOverCurrent(const size_t channel);
+  bool channelPoweredUp(size_t channel);
+  bool referencePoweredUp(uint8_t chip);
+  bool thermalShutdown(uint8_t chip);
+  bool channelOverCurrent(size_t channel);
 
   void beginSimultaneousUpdate();
   void simultaneousUpdate();
@@ -159,24 +159,24 @@ private:
   Range range_[CHANNEL_COUNT_MAX];
 
   void initialize();
-  uint8_t channelToChip(const size_t channel);
-  uint8_t channelToChannelAddress(const size_t channel);
+  uint8_t channelToChip(size_t channel);
+  uint8_t channelToChannelAddress(size_t channel);
   void enableClockSelect();
   void disableClockSelect();
   void spiBeginTransaction();
   void spiEndTransaction();
-  void writeMosiDatagramToChip(const int chip,
-                               const Datagram mosi_datagram);
-  Datagram readMisoDatagramFromChip(const int chip);
+  void writeMosiDatagramToChip(int chip,
+                               Datagram mosi_datagram);
+  Datagram readMisoDatagramFromChip(int chip);
   void powerUpAllDacs();
-  void setOutputRangeToChip(const int chip,
-                            const uint8_t channel_address,
-                            const Range range);
-  void setDacValueToChip(const int chip,
-                         const uint8_t channel_address,
-                         const long data);
-  void load(const int chip);
-  uint16_t readPowerControlRegister(const uint8_t chip);
-  bool rangeIsBipolar(const Range range);
+  void setOutputRangeToChip(int chip,
+                            uint8_t channel_address,
+                            Range range);
+  void setDacValueToChip(int chip,
+                         uint8_t channel_address,
+                         long data);
+  void load(int chip);
+  uint16_t readPowerControlRegister(uint8_t chip);
+  bool rangeIsBipolar(Range range);
 };
 #endif
