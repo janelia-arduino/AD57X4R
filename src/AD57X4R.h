@@ -34,35 +34,35 @@ public:
   void setClearPin(size_t pin);
 
   void setup(Resolution resolution=AD5754R,
-             uint8_t chip_count=1);
+    uint8_t chip_count=1);
 
   uint8_t getChipCount();
   size_t getChannelCount();
 
   void setOutputRange(size_t channel,
-                      Range range);
+    Range range);
   void setAllOutputRanges(Range range);
 
   long getDacValueMin(size_t channel);
   long getDacValueMax(size_t channel);
 
   void setDacValue(size_t channel,
-                   long dac_value);
+    long dac_value);
   void setAllDacValues(long dac_value);
   void analogWrite(size_t channel,
-                   long dac_value);
+    long dac_value);
 
   double getVoltageMin(size_t channel);
   double getVoltageMax(size_t channel);
 
   void setVoltage(size_t channel,
-                  double voltage);
+    double voltage);
   void setAllVoltages(double voltage);
 
   double dacValueToVoltage(size_t channel,
-                           long dac_value);
+    long dac_value);
   long voltageToDacValue(size_t channel,
-                         double voltage);
+    double voltage);
 
   bool channelPoweredUp(size_t channel);
   bool referencePoweredUp(uint8_t chip);
@@ -166,15 +166,15 @@ private:
   void spiBeginTransaction();
   void spiEndTransaction();
   void writeMosiDatagramToChip(int chip,
-                               Datagram mosi_datagram);
+    Datagram mosi_datagram);
   Datagram readMisoDatagramFromChip(int chip);
   void powerUpAllDacs();
   void setOutputRangeToChip(int chip,
-                            uint8_t channel_address,
-                            Range range);
+    uint8_t channel_address,
+    Range range);
   void setDacValueToChip(int chip,
-                         uint8_t channel_address,
-                         long data);
+    uint8_t channel_address,
+    long data);
   void load(int chip);
   uint16_t readPowerControlRegister(uint8_t chip);
   bool rangeIsBipolar(Range range);

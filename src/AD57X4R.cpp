@@ -45,7 +45,7 @@ void AD57X4R::setClearPin(size_t pin)
 }
 
 void AD57X4R::setup(Resolution resolution,
-                    uint8_t chip_count)
+  uint8_t chip_count)
 {
   if ((chip_count >= CHIP_COUNT_MIN) && (chip_count <= CHIP_COUNT_MAX))
   {
@@ -73,11 +73,11 @@ size_t AD57X4R::getChannelCount()
 }
 
 void AD57X4R::setOutputRange(size_t channel,
-                             Range range)
+  Range range)
 {
   size_t channel_constrained = constrain(channel,
-                                         CHANNEL_MIN,
-                                         getChannelCount()-1);
+    CHANNEL_MIN,
+    getChannelCount()-1);
   uint8_t chip = channelToChip(channel_constrained);
   uint8_t channel_address = channelToChannelAddress(channel_constrained);
   range_[channel_constrained] = range;
@@ -161,14 +161,14 @@ long AD57X4R::getDacValueMax(size_t channel)
 }
 
 void AD57X4R::setDacValue(size_t channel,
-                          long dac_value)
+  long dac_value)
 {
   size_t channel_constrained = constrain(channel,
-                                         CHANNEL_MIN,
-                                         getChannelCount()-1);
+    CHANNEL_MIN,
+    getChannelCount()-1);
   long dac_value_constrained = constrain(dac_value,
-                                         getDacValueMin(channel_constrained),
-                                         getDacValueMax(channel_constrained));
+    getDacValueMin(channel_constrained),
+    getDacValueMax(channel_constrained));
   uint8_t chip = channelToChip(channel_constrained);
   uint8_t channel_address = channelToChannelAddress(channel_constrained);
   setDacValueToChip(chip,channel_address,dac_value_constrained);
@@ -183,7 +183,7 @@ void AD57X4R::setAllDacValues(long dac_value)
 }
 
 void AD57X4R::analogWrite(size_t channel,
-                          long dac_value)
+  long dac_value)
 {
   setDacValue(channel,dac_value);
 }
@@ -257,12 +257,12 @@ double AD57X4R::getVoltageMax(size_t channel)
 }
 
 void AD57X4R::setVoltage(size_t channel,
-                         double voltage)
+  double voltage)
 {
   // Wastes resolution, need to change algorithm
   size_t channel_constrained = constrain(channel,
-                                         CHANNEL_MIN,
-                                         getChannelCount()-1);
+    CHANNEL_MIN,
+    getChannelCount()-1);
   uint8_t chip = channelToChip(channel_constrained);
   uint8_t channel_address = channelToChannelAddress(channel_constrained);
   long dac_value = voltageToDacValue(channel,voltage);
@@ -278,17 +278,17 @@ void AD57X4R::setAllVoltages(double voltage)
 }
 
 double AD57X4R::dacValueToVoltage(size_t channel,
-                                  long dac_value)
+  long dac_value)
 {
   double voltage = 0.0;
   size_t channel_constrained = constrain(channel,
-                                         CHANNEL_MIN,
-                                         getChannelCount()-1);
+    CHANNEL_MIN,
+    getChannelCount()-1);
   long dac_value_min = getDacValueMin(channel_constrained);
   long dac_value_max = getDacValueMax(channel_constrained);
   long dac_value_constrained = constrain(dac_value,
-                                         dac_value_min,
-                                         dac_value_max);
+    dac_value_min,
+    dac_value_max);
   if ((dac_value_constrained < 0) && rangeIsBipolar(range_[channel_constrained]))
   {
     double voltage_min = getVoltageMin(channel_constrained);
@@ -303,17 +303,17 @@ double AD57X4R::dacValueToVoltage(size_t channel,
 }
 
 long AD57X4R::voltageToDacValue(size_t channel,
-                                double voltage)
+  double voltage)
 {
   long dac_value = 0;
   size_t channel_constrained = constrain(channel,
-                                         CHANNEL_MIN,
-                                         getChannelCount()-1);
+    CHANNEL_MIN,
+    getChannelCount()-1);
   double voltage_min = getVoltageMin(channel_constrained);
   double voltage_max = getVoltageMax(channel_constrained);
   double voltage_constrained = constrain(voltage,
-                                         voltage_min,
-                                         voltage_max);
+    voltage_min,
+    voltage_max);
   if ((voltage_constrained < 0) && rangeIsBipolar(range_[channel_constrained]))
   {
     long dac_value_min = getDacValueMin(channel_constrained);
@@ -481,7 +481,7 @@ void AD57X4R::spiEndTransaction()
 }
 
 void AD57X4R::writeMosiDatagramToChip(int chip,
-                                      AD57X4R::Datagram mosi_datagram)
+  AD57X4R::Datagram mosi_datagram)
 {
   spiBeginTransaction();
   for (int i=(DATAGRAM_SIZE - 1); i>=0; --i)
@@ -518,10 +518,10 @@ AD57X4R::Datagram AD57X4R::readMisoDatagramFromChip(int chip)
 void AD57X4R::powerUpAllDacs()
 {
   uint16_t data = (POWER_CONTROL_DAC_A |
-                   POWER_CONTROL_DAC_B |
-                   POWER_CONTROL_DAC_C |
-                   POWER_CONTROL_DAC_D |
-                   POWER_CONTROL_REF);
+    POWER_CONTROL_DAC_B |
+    POWER_CONTROL_DAC_C |
+    POWER_CONTROL_DAC_D |
+    POWER_CONTROL_REF);
 
   Datagram mosi_datagram;
   mosi_datagram.uint32 = 0;
@@ -534,8 +534,8 @@ void AD57X4R::powerUpAllDacs()
 }
 
 void AD57X4R::setOutputRangeToChip(int chip,
-                                   uint8_t channel_address,
-                                   Range range)
+  uint8_t channel_address,
+  Range range)
 {
   uint16_t data;
   switch (range)
@@ -572,8 +572,8 @@ void AD57X4R::setOutputRangeToChip(int chip,
 }
 
 void AD57X4R::setDacValueToChip(int chip,
-                                uint8_t channel_address,
-                                long data)
+  uint8_t channel_address,
+  long data)
 {
   Datagram mosi_datagram;
   mosi_datagram.uint32 = 0;

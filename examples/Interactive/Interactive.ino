@@ -39,7 +39,7 @@ uint8_t parse(char *line, char **argv, uint8_t max_args)
       break;
     }
     while (*line != '\0' && *line != ',' && *line != ' ' &&
-           *line != '\t' && *line != '\n')
+      *line != '\t' && *line != '\n')
     {
       line++; /* skip the argument until ... */
     }
