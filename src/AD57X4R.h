@@ -17,14 +17,14 @@ class AD57X4R
 {
 public:
   enum Resolution {AD5724R,
-                   AD5734R,
-                   AD5754R};
+    AD5734R,
+    AD5754R};
   enum Range {UNIPOLAR_5V,
-              UNIPOLAR_10V,
-              UNIPOLAR_10V8,
-              BIPOLAR_5V,
-              BIPOLAR_10V,
-              BIPOLAR_10V8};
+    UNIPOLAR_10V,
+    UNIPOLAR_10V8,
+    BIPOLAR_5V,
+    BIPOLAR_10V,
+    BIPOLAR_10V8};
 
   AD57X4R();
   AD57X4R(size_t chip_select_pin);
@@ -43,14 +43,14 @@ public:
     Range range);
   void setAllOutputRanges(Range range);
 
-  long getDacValueMin(size_t channel);
-  long getDacValueMax(size_t channel);
+  long getAnalogValueMin(size_t channel);
+  long getAnalogValueMax(size_t channel);
 
-  void setDacValue(size_t channel,
-    long dac_value);
-  void setAllDacValues(long dac_value);
+  void setAnalogValue(size_t channel,
+    long analog_value);
+  void setAllAnalogValues(long analog_value);
   void analogWrite(size_t channel,
-    long dac_value);
+    long analog_value);
 
   double getVoltageMin(size_t channel);
   double getVoltageMax(size_t channel);
@@ -59,9 +59,9 @@ public:
     double voltage);
   void setAllVoltages(double voltage);
 
-  double dacValueToVoltage(size_t channel,
-    long dac_value);
-  long voltageToDacValue(size_t channel,
+  double analogValueToVoltage(size_t channel,
+    long analog_value);
+  long voltageToAnalogValue(size_t channel,
     double voltage);
 
   bool channelPoweredUp(size_t channel);
@@ -172,7 +172,7 @@ private:
   void setOutputRangeToChip(int chip,
     uint8_t channel_address,
     Range range);
-  void setDacValueToChip(int chip,
+  void setAnalogValueToChip(int chip,
     uint8_t channel_address,
     long data);
   void load(int chip);

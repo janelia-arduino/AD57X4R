@@ -10,8 +10,8 @@ const long BAUD = 115200;
 const size_t CHANNEL_COUNT = 4;
 const double VOLTAGE_MIN = -10.8;
 const double VOLTAGE_MAX = 10.8;
-const long DAC_MIN = -32768;
-const long DAC_MAX = 65536;
+const long ANALOG_MIN = -32768;
+const long ANALOG_MAX = 65536;
 
 AD57X4R dac = AD57X4R(CHIP_SELECT_PIN);
 
@@ -79,27 +79,27 @@ void loop()
         size_t channel = atoi(argv[1]);
         double voltage = atof(argv[2]);
         dac.setVoltage(channel,voltage);
-        long dac_value = dac.voltageToDacValue(channel,voltage);
-        Serial << "setVoltage CHANNEL: " << channel << ", VOLTAGE: " << voltage << ", DAC_VALUE: " << dac_value << "\n";
+        long analog_value = dac.voltageToAnalogValue(channel,voltage);
+        Serial << "setVoltage CHANNEL: " << channel << ", VOLTAGE: " << voltage << ", ANALOG_VALUE: " << analog_value << "\n";
       }
       else
       {
         Serial << "setVoltage <CHANNEL> <VOLTAGE>, CHANNEL = {" << CHANNEL_MIN << ".." << CHANNEL_MAX << "}" << ", VOLTAGE = {" << VOLTAGE_MIN << ".." << VOLTAGE_MAX << "}" << endl;
       }
     }
-    else if (strcmp(argv[0], "setDacValue") == 0)
+    else if (strcmp(argv[0], "setAnalogValue") == 0)
     {
       if ((arg_count == 3) && (0 < strlen(argv[1])) && (0 < strlen(argv[2])))
       {
         size_t channel = atoi(argv[1]);
-        long dac_value = atoi(argv[2]);
-        dac.setDacValue(channel,dac_value);
-        double voltage = dac.dacValueToVoltage(channel,dac_value);
-        Serial << "setDacValue CHANNEL: " << channel << ", DAC_VALUE: " << dac_value << ", VOLTAGE: " << voltage << "\n";
+        long analog_value = atoi(argv[2]);
+        dac.setAnalogValue(channel,analog_value);
+        double voltage = dac.analogValueToVoltage(channel,analog_value);
+        Serial << "setAnalogValue CHANNEL: " << channel << ", ANALOG_VALUE: " << analog_value << ", VOLTAGE: " << voltage << "\n";
       }
       else
       {
-        Serial << "setDacValue <CHANNEL> <DAC_VALUE>, CHANNEL = {" << CHANNEL_MIN << ".." << CHANNEL_MAX << "}" << ", DAC_VALUE = {" << DAC_MIN << ".." << DAC_MAX << "}" << endl;
+        Serial << "setAnalogValue <CHANNEL> <ANALOG_VALUE>, CHANNEL = {" << CHANNEL_MIN << ".." << CHANNEL_MAX << "}" << ", ANALOG_VALUE = {" << ANALOG_MIN << ".." << ANALOG_MAX << "}" << endl;
       }
     }
     else if (strcmp(argv[0], "channelPoweredUp") == 0)
@@ -113,12 +113,12 @@ void loop()
       }
       else
       {
-        Serial << "channelPoweredUP <CHANNEL>, CHANNEL = {" << CHANNEL_MIN << ".." << CHANNEL_MAX << "}" << endl;
+        Serial << "channelPoweredUp <CHANNEL>, CHANNEL = {" << CHANNEL_MIN << ".." << CHANNEL_MAX << "}" << endl;
       }
     }
     else
     {
-      Serial.println("setVoltage <CHANNEL> <VOLTAGE>, setDacValue <CHANNEL> <DAC_VALUE>, channelPoweredUp <CHANNEL>");
+      Serial.println("setVoltage <CHANNEL> <VOLTAGE>, setAnalogValue <CHANNEL> <ANALOG_VALUE>, channelPoweredUp <CHANNEL>");
     }
 
     input_complete = false;

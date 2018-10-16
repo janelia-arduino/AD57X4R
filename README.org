@@ -4,7 +4,7 @@
 
 * Library Information
   - Name :: AD57X4R
-  - Version :: 3.0.2
+  - Version :: 4.0.0
   - License :: BSD
   - URL :: https://github.com/janelia-arduino/AD57X4R
   - Author :: Peter Polidoro
@@ -13,15 +13,15 @@
   Provides an SPI based interface to the AD5724R, AD5734R, and the AD5754R Quad
   12-/14-/16-Bit Unipolar/Bipolar Voltage Output DACs.
 
-  The outputs can be set two ways, either by setting the DAC value or by setting
-  the voltage directly. The DAC values are integers with the range determined by
-  the resolution and whether the output is set to unipolar or bipolar. This is
-  similar to Arduino analogWrite and this method is provided as an alternative
-  name for convenience. Alternatively, the output voltages can be set directly.
-  Voltages are floats with the minimum and maximum values determinded by the
-  output range. By default, the outputs are updated immediately after they are
-  set, but the outputs can be updated synchronously by using the simultaneous
-  update methods.
+  The outputs can be set two ways, either by setting the analog value or by
+  setting the voltage directly. The analog values are integers with the range
+  determined by the resolution and whether the output is set to unipolar or
+  bipolar. This is similar to Arduino analogWrite and this method is provided as
+  an alternative name for convenience. Alternatively, the output voltages can be
+  set directly. Voltages are floats with the minimum and maximum values
+  determinded by the output range. By default, the outputs are updated
+  immediately after they are set, but the outputs can be updated synchronously
+  by using the simultaneous update methods.
 
 * Library Examples
 
