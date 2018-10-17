@@ -4,7 +4,7 @@
 
 * Library Information
   - Name :: AD57X4R
-  - Version :: 4.0.0
+  - Version :: 4.0.1
   - License :: BSD
   - URL :: https://github.com/janelia-arduino/AD57X4R
   - Author :: Peter Polidoro
@@ -22,14 +22,6 @@
   determinded by the output range. By default, the outputs are updated
   immediately after they are set, but the outputs can be updated synchronously
   by using the simultaneous update methods.
-
-* Library Examples
-
-  [[./examples]]
-
-* Installation Instructions
-
-  [[https://github.com/janelia-arduino/arduino-libraries]]
 
 * Wiring
 
