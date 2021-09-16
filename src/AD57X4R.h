@@ -6,7 +6,7 @@
 // Unipolar/Bipolar Voltage Output DACs.
 //
 // Authors:
-// Peter Polidoro peterpolidoro@gmail.com
+// Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
 #ifndef AD57X4R_H
 #define AD57X4R_H
