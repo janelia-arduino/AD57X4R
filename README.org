@@ -4,11 +4,13 @@
 
 * Library Information
   - Name :: AD57X4R
-  - Version :: 4.0.1
+  - Version :: 5.0.0
   - License :: BSD
   - URL :: https://github.com/janelia-arduino/AD57X4R
   - Author :: Peter Polidoro
   - Email :: peter@polidoro.io
+
+** Description
 
   Provides an SPI based interface to the AD5724R, AD5734R, and the AD5754R Quad
   12-/14-/16-Bit Unipolar/Bipolar Voltage Output DACs.
