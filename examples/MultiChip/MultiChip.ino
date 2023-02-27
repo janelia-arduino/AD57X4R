@@ -24,10 +24,8 @@ void setup()
 
 void loop()
 {
-  size_t channel_count = dac.getChannelCount();
-
   dac.beginSimultaneousUpdate();
-  for (size_t channel=0; channel<getChannelCount(); ++channel)
+  for (size_t channel=0; channel<dac.getChannelCount(); ++channel)
   {
     dac.setVoltage(channel, channel*VOLTAGE_INC);
   }
