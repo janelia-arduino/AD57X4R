@@ -16,10 +16,12 @@
 class AD57X4R
 {
 public:
-  enum Resolution {AD5724R,
+  enum Resolution {
+    AD5724R,
     AD5734R,
     AD5754R};
-  enum Range {UNIPOLAR_5V,
+  enum Range {
+    UNIPOLAR_5V,
     UNIPOLAR_10V,
     UNIPOLAR_10V8,
     BIPOLAR_5V,
@@ -85,7 +87,7 @@ private:
   const static int CHIP_ALL = -1;
 
   const static size_t CHIP_COUNT_MIN = 1;
-  const static size_t CHIP_COUNT_MAX = 4;
+  const static size_t CHIP_COUNT_MAX = 8;
   uint8_t chip_count_;
 
   const static size_t CHANNEL_MIN = 0;
@@ -101,7 +103,7 @@ private:
   // Datagram
   union Datagram
   {
-    struct Fields
+    struct
     {
       uint32_t data : 16;
       uint32_t channel_address : 3;
@@ -109,8 +111,8 @@ private:
       uint32_t space0 : 1;
       uint32_t rw : 1;
       uint32_t space1 : 8;
-    } fields;
-    uint32_t uint32;
+    };
+    uint32_t bytes;
   };
 
   // Read/Write Bit
@@ -165,14 +167,15 @@ private:
   void disableClockSelect();
   void spiBeginTransaction();
   void spiEndTransaction();
+  void initializeMosiDatagramArray(Datagram datagram_array[]);
   void writeMosiDatagramToChip(int chip,
     Datagram mosi_datagram);
   Datagram readMisoDatagramFromChip(int chip);
   void powerUpAllDacs();
-  void setOutputRangeToChip(int chip,
+  void setOutputRangeOnChip(int chip,
     uint8_t channel_address,
     Range range);
-  void setAnalogValueToChip(int chip,
+  void setAnalogValueOnChip(int chip,
     uint8_t channel_address,
     long data);
   void load(int chip);
