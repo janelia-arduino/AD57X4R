@@ -163,8 +163,8 @@ private:
   void initialize();
   uint8_t channelToChip(size_t channel);
   uint8_t channelToChannelAddress(size_t channel);
-  void enableClockSelect();
-  void disableClockSelect();
+  void enableChipSelect();
+  void disableChipSelect();
   void spiBeginTransaction();
   void spiEndTransaction();
   void initializeMosiDatagramArray(Datagram datagram_array[]);

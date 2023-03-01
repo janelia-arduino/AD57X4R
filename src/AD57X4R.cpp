@@ -459,25 +459,25 @@ uint8_t AD57X4R::channelToChannelAddress(size_t channel)
   return channel_address;
 }
 
-void AD57X4R::enableClockSelect()
+void AD57X4R::enableChipSelect()
 {
   digitalWrite(chip_select_pin_,LOW);
 }
 
-void AD57X4R::disableClockSelect()
+void AD57X4R::disableChipSelect()
 {
   digitalWrite(chip_select_pin_,HIGH);
 }
 void AD57X4R::spiBeginTransaction()
 {
+  enableChipSelect();
   SPI.beginTransaction(SPISettings(SPI_CLOCK,SPI_BIT_ORDER,SPI_MODE));
-  enableClockSelect();
 }
 
 void AD57X4R::spiEndTransaction()
 {
-  disableClockSelect();
   SPI.endTransaction();
+  disableChipSelect();
 }
 
 void AD57X4R::initializeMosiDatagramArray(AD57X4R::Datagram datagram_array[])
@@ -497,8 +497,18 @@ void AD57X4R::writeMosiDatagramToChip(int chip,
   AD57X4R::Datagram mosi_datagram)
 {
   Datagram mosi_datagram_array[chip_count_];
-  initializeMosiDatagramArray(mosi_datagram_array);
-  mosi_datagram_array[chip] = mosi_datagram;
+  if (chip == CHIP_ALL)
+  {
+    for (size_t chip_n=0; chip_n<chip_count_; ++chip_n)
+    {
+      datagram_array[chip_n] = mosi_datagram;
+    }
+  }
+  if ((chip >=0) && (chip < chip_count_))
+  {
+    initializeMosiDatagramArray(mosi_datagram_array);
+    mosi_datagram_array[chip] = mosi_datagram;
+  }
 
   spiBeginTransaction();
   for (int chip_n=(chip_count_ - 1); chip_n>=0; --chip_n)

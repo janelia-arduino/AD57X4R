@@ -27,12 +27,12 @@
 
 * Wiring
 
-  | PIN       | CONNECTION                                                          |
-  |-----------+---------------------------------------------------------------------|
-  | SDIN      | connect to processor MOSI pin or SDO of previous daisy-chained chip |
-  | SDO       | connect to processor MISO pin or SDIN of next daisy-chained chip    |
-  | SCLK      | connect to processor SCK pin                                        |
-  | SYNC      | connect to processor chip select pin                                |
-  | BIN2SCOMP | GND                                                                 |
-  | LDAC      | GND or connect to processor pin and use setLoadDacPin method        |
-  | CLR       | DVCC or connect to processor pin and use setClearPin method         |
+  | PIN       | CONNECTION                                                                    |
+  |-----------+-------------------------------------------------------------------------------|
+  | SDIN      | connect to processor MOSI pin or SDO of previous daisy-chained chip           |
+  | SDO       | connect to processor MISO pin or SDIN of next daisy-chained chip              |
+  | SCLK      | connect to processor SCK pin                                                  |
+  | SYNC      | connect to processor CS pin and set in constructor or setChipSelectPin method |
+  | BIN2SCOMP | GND                                                                           |
+  | LDAC      | GND or connect to processor pin and use setLoadDacPin method                  |
+  | CLR       | DVCC or connect to processor pin and use setClearPin method                   |
