@@ -501,7 +501,7 @@ void AD57X4R::writeMosiDatagramToChip(int chip,
   {
     for (size_t chip_n=0; chip_n<chip_count_; ++chip_n)
     {
-      datagram_array[chip_n] = mosi_datagram;
+      mosi_datagram_array[chip_n] = mosi_datagram;
     }
   }
   if ((chip >=0) && (chip < chip_count_))
