@@ -4,11 +4,13 @@
 
 * Library Information
   - Name :: AD57X4R
-  - Version :: 4.0.1
+  - Version :: 5.0.0
   - License :: BSD
   - URL :: https://github.com/janelia-arduino/AD57X4R
   - Author :: Peter Polidoro
   - Email :: peter@polidoro.io
+
+** Description
 
   Provides an SPI based interface to the AD5724R, AD5734R, and the AD5754R Quad
   12-/14-/16-Bit Unipolar/Bipolar Voltage Output DACs.
@@ -25,12 +27,12 @@
 
 * Wiring
 
-  | PIN       | CONNECTION                                                          |
-  |-----------+---------------------------------------------------------------------|
-  | SDIN      | connect to processor MOSI pin or SDO of previous daisy-chained chip |
-  | SDO       | connect to processor MISO pin or SDIN of next daisy-chained chip    |
-  | SCLK      | connect to processor SCK pin                                        |
-  | SYNC      | connect to processor chip select pin                                |
-  | BIN2SCOMP | GND                                                                 |
-  | LDAC      | GND or connect to processor pin and use setLoadDacPin method        |
-  | CLR       | DVCC or connect to processor pin and use setClearPin method         |
+  | PIN       | CONNECTION                                                                    |
+  |-----------+-------------------------------------------------------------------------------|
+  | SDIN      | connect to processor MOSI pin or SDO of previous daisy-chained chip           |
+  | SDO       | connect to processor MISO pin or SDIN of next daisy-chained chip              |
+  | SCLK      | connect to processor SCK pin                                                  |
+  | SYNC      | connect to processor CS pin and set in constructor or setChipSelectPin method |
+  | BIN2SCOMP | GND                                                                           |
+  | LDAC      | GND or connect to processor pin and use setLoadDacPin method                  |
+  | CLR       | DVCC or connect to processor pin and use setClearPin method                   |

@@ -44,7 +44,7 @@ uint8_t parse(char *line, char **argv, uint8_t max_args)
       line++; /* skip the argument until ... */
     }
   }
-  *argv = '\0'; /* mark the end of argument list */
+  **argv = '\0'; /* mark the end of argument list */
   return arg_count;
 }
 

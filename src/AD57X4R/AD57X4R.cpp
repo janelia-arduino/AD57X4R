@@ -81,7 +81,7 @@ void AD57X4R::setOutputRange(size_t channel,
   uint8_t chip = channelToChip(channel_constrained);
   uint8_t channel_address = channelToChannelAddress(channel_constrained);
   range_[channel_constrained] = range;
-  setOutputRangeToChip(chip,channel_address,range);
+  setOutputRangeOnChip(chip,channel_address,range);
 }
 
 void AD57X4R::setAllOutputRanges(Range range)
@@ -92,7 +92,7 @@ void AD57X4R::setAllOutputRanges(Range range)
   {
     range_[channel] = range;
   }
-  setOutputRangeToChip(chip,channel_address,range);
+  setOutputRangeOnChip(chip,channel_address,range);
 }
 
 long AD57X4R::getAnalogValueMin(size_t channel)
@@ -171,7 +171,7 @@ void AD57X4R::setAnalogValue(size_t channel,
     getAnalogValueMax(channel_constrained));
   uint8_t chip = channelToChip(channel_constrained);
   uint8_t channel_address = channelToChannelAddress(channel_constrained);
-  setAnalogValueToChip(chip,channel_address,analog_value_constrained);
+  setAnalogValueOnChip(chip,channel_address,analog_value_constrained);
 }
 
 void AD57X4R::setAllAnalogValues(long analog_value)
@@ -266,7 +266,7 @@ void AD57X4R::setVoltage(size_t channel,
   uint8_t chip = channelToChip(channel_constrained);
   uint8_t channel_address = channelToChannelAddress(channel_constrained);
   long analog_value = voltageToAnalogValue(channel,voltage);
-  setAnalogValueToChip(chip,channel_address,analog_value);
+  setAnalogValueOnChip(chip,channel_address,analog_value);
 }
 
 void AD57X4R::setAllVoltages(double voltage)
@@ -358,7 +358,7 @@ bool AD57X4R::channelPoweredUp(size_t channel)
 
 bool AD57X4R::referencePoweredUp(uint8_t chip)
 {
-  if (chip >= getChipCount())
+  if (chip >= chip_count_)
   {
     return false;
   }
@@ -370,7 +370,7 @@ bool AD57X4R::referencePoweredUp(uint8_t chip)
 
 bool AD57X4R::thermalShutdown(uint8_t chip)
 {
-  if (chip >= getChipCount())
+  if (chip >= chip_count_)
   {
     return false;
   }
@@ -459,58 +459,96 @@ uint8_t AD57X4R::channelToChannelAddress(size_t channel)
   return channel_address;
 }
 
-void AD57X4R::enableClockSelect()
+void AD57X4R::enableChipSelect()
 {
   digitalWrite(chip_select_pin_,LOW);
 }
 
-void AD57X4R::disableClockSelect()
+void AD57X4R::disableChipSelect()
 {
   digitalWrite(chip_select_pin_,HIGH);
 }
 void AD57X4R::spiBeginTransaction()
 {
+  enableChipSelect();
   SPI.beginTransaction(SPISettings(SPI_CLOCK,SPI_BIT_ORDER,SPI_MODE));
-  enableClockSelect();
 }
 
 void AD57X4R::spiEndTransaction()
 {
-  disableClockSelect();
   SPI.endTransaction();
+  disableChipSelect();
+}
+
+void AD57X4R::initializeMosiDatagramArray(AD57X4R::Datagram datagram_array[])
+{
+  Datagram mosi_datagram;
+  mosi_datagram.bytes = 0;
+  mosi_datagram.rw = RW_WRITE;
+  mosi_datagram.reg = REGISTER_CONTROL;
+  mosi_datagram.channel_address = CONTROL_ADDRESS_NOP;
+  for (size_t chip_n=0; chip_n<chip_count_; ++chip_n)
+  {
+    datagram_array[chip_n] = mosi_datagram;
+  }
 }
 
 void AD57X4R::writeMosiDatagramToChip(int chip,
   AD57X4R::Datagram mosi_datagram)
 {
-  spiBeginTransaction();
-  for (int i=(DATAGRAM_SIZE - 1); i>=0; --i)
+  Datagram mosi_datagram_array[chip_count_];
+  if (chip == CHIP_ALL)
   {
-    uint8_t byte_write = (mosi_datagram.uint32 >> (8*i)) & 0xff;
-    SPI.transfer(byte_write);
+    for (size_t chip_n=0; chip_n<chip_count_; ++chip_n)
+    {
+      mosi_datagram_array[chip_n] = mosi_datagram;
+    }
+  }
+  if ((chip >=0) && (chip < chip_count_))
+  {
+    initializeMosiDatagramArray(mosi_datagram_array);
+    mosi_datagram_array[chip] = mosi_datagram;
+  }
+
+  spiBeginTransaction();
+  for (int chip_n=(chip_count_ - 1); chip_n>=0; --chip_n)
+  {
+    Datagram mosi_datagram_n = mosi_datagram_array[chip];
+    for (int byte_n=(DATAGRAM_SIZE - 1); byte_n>=0; --byte_n)
+    {
+      uint8_t byte_write = (mosi_datagram_n.bytes >> (8*byte_n)) & 0xff;
+      SPI.transfer(byte_write);
+    }
   }
   spiEndTransaction();
 }
 
 AD57X4R::Datagram AD57X4R::readMisoDatagramFromChip(int chip)
 {
-  Datagram mosi_datagram;
-  mosi_datagram.uint32 = 0;
-  mosi_datagram.fields.rw = RW_WRITE;
-  mosi_datagram.fields.reg = REGISTER_CONTROL;
-  mosi_datagram.fields.channel_address = CONTROL_ADDRESS_NOP;
+  Datagram mosi_datagram_array[chip_count_];
+  initializeMosiDatagramArray(mosi_datagram_array);
 
-  Datagram miso_datagram;
-  miso_datagram.uint32 = 0;
+  Datagram miso_datagram_array[chip_count_];
 
   spiBeginTransaction();
-  for (int i=(DATAGRAM_SIZE - 1); i>=0; --i)
+  for (int chip_n=(chip_count_ - 1); chip_n>=0; --chip_n)
   {
-    uint8_t byte_write = (mosi_datagram.uint32 >> (8*i)) & 0xff;
-    uint8_t byte_read = SPI.transfer(byte_write);
-    miso_datagram.uint32 |= ((uint32_t)byte_read) << (8*i);
+    miso_datagram_array[chip].bytes = 0;
+    for (int byte_n=(DATAGRAM_SIZE - 1); byte_n>=0; --byte_n)
+    {
+      uint8_t byte_write = (mosi_datagram_array[chip].bytes >> (8*byte_n)) & 0xff;
+      uint8_t byte_read = SPI.transfer(byte_write);
+      miso_datagram_array[chip].bytes |= ((uint32_t)byte_read) << (8*byte_n);
+    }
   }
   spiEndTransaction();
+
+  Datagram miso_datagram;
+  miso_datagram.bytes = 0;
+  if ((chip >=0) && (chip < chip_count_))
+  {
+    miso_datagram = miso_datagram_array[chip];
+  }
 
   return miso_datagram;
 }
@@ -524,16 +562,16 @@ void AD57X4R::powerUpAllDacs()
     POWER_CONTROL_REF);
 
   Datagram mosi_datagram;
-  mosi_datagram.uint32 = 0;
-  mosi_datagram.fields.rw = RW_WRITE;
-  mosi_datagram.fields.reg = REGISTER_POWER_CONTROL;
-  mosi_datagram.fields.channel_address = CHANNEL_ADDRESS_POWER_CONTROL;
-  mosi_datagram.fields.data = data;
+  mosi_datagram.bytes = 0;
+  mosi_datagram.rw = RW_WRITE;
+  mosi_datagram.reg = REGISTER_POWER_CONTROL;
+  mosi_datagram.channel_address = CHANNEL_ADDRESS_POWER_CONTROL;
+  mosi_datagram.data = data;
   int chip = CHIP_ALL;
   writeMosiDatagramToChip(chip,mosi_datagram);
 }
 
-void AD57X4R::setOutputRangeToChip(int chip,
+void AD57X4R::setOutputRangeOnChip(int chip,
   uint8_t channel_address,
   Range range)
 {
@@ -563,33 +601,33 @@ void AD57X4R::setOutputRangeToChip(int chip,
       break;
   }
   Datagram mosi_datagram;
-  mosi_datagram.uint32 = 0;
-  mosi_datagram.fields.rw = RW_WRITE;
-  mosi_datagram.fields.reg = REGISTER_OUTPUT_RANGE;
-  mosi_datagram.fields.channel_address = channel_address;
-  mosi_datagram.fields.data = data;
+  mosi_datagram.bytes = 0;
+  mosi_datagram.rw = RW_WRITE;
+  mosi_datagram.reg = REGISTER_OUTPUT_RANGE;
+  mosi_datagram.channel_address = channel_address;
+  mosi_datagram.data = data;
   writeMosiDatagramToChip(chip,mosi_datagram);
 }
 
-void AD57X4R::setAnalogValueToChip(int chip,
+void AD57X4R::setAnalogValueOnChip(int chip,
   uint8_t channel_address,
   long data)
 {
   Datagram mosi_datagram;
-  mosi_datagram.uint32 = 0;
-  mosi_datagram.fields.rw = RW_WRITE;
-  mosi_datagram.fields.reg = REGISTER_DAC;
-  mosi_datagram.fields.channel_address = channel_address;
+  mosi_datagram.bytes = 0;
+  mosi_datagram.rw = RW_WRITE;
+  mosi_datagram.reg = REGISTER_DAC;
+  mosi_datagram.channel_address = channel_address;
   switch (resolution_)
   {
     case AD5754R:
-      mosi_datagram.fields.data = data;
+      mosi_datagram.data = data;
       break;
     case AD5734R:
-      mosi_datagram.fields.data = data << 2;
+      mosi_datagram.data = data << 2;
       break;
     case AD5724R:
-      mosi_datagram.fields.data = data << 4;
+      mosi_datagram.data = data << 4;
       break;
   }
   writeMosiDatagramToChip(chip,mosi_datagram);
@@ -598,24 +636,24 @@ void AD57X4R::setAnalogValueToChip(int chip,
 void AD57X4R::load(int chip)
 {
   Datagram mosi_datagram;
-  mosi_datagram.uint32 = 0;
-  mosi_datagram.fields.rw = RW_WRITE;
-  mosi_datagram.fields.reg = REGISTER_CONTROL;
-  mosi_datagram.fields.channel_address = CONTROL_ADDRESS_LOAD;
+  mosi_datagram.bytes = 0;
+  mosi_datagram.rw = RW_WRITE;
+  mosi_datagram.reg = REGISTER_CONTROL;
+  mosi_datagram.channel_address = CONTROL_ADDRESS_LOAD;
   writeMosiDatagramToChip(chip,mosi_datagram);
 }
 
 uint16_t AD57X4R::readPowerControlRegister(uint8_t chip)
 {
   Datagram mosi_datagram;
-  mosi_datagram.uint32 = 0;
-  mosi_datagram.fields.rw = RW_READ;
-  mosi_datagram.fields.reg = REGISTER_POWER_CONTROL;
-  mosi_datagram.fields.channel_address = CHANNEL_ADDRESS_POWER_CONTROL;
+  mosi_datagram.bytes = 0;
+  mosi_datagram.rw = RW_READ;
+  mosi_datagram.reg = REGISTER_POWER_CONTROL;
+  mosi_datagram.channel_address = CHANNEL_ADDRESS_POWER_CONTROL;
   writeMosiDatagramToChip(chip,mosi_datagram);
 
   Datagram miso_datagram = readMisoDatagramFromChip(chip);
-  return miso_datagram.fields.data;
+  return miso_datagram.data;
 }
 
 bool AD57X4R::rangeIsBipolar(AD57X4R::Range range)
