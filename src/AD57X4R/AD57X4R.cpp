@@ -513,7 +513,7 @@ void AD57X4R::writeMosiDatagramToChip(int chip,
   spiBeginTransaction();
   for (int chip_n=(chip_count_ - 1); chip_n>=0; --chip_n)
   {
-    Datagram mosi_datagram_n = mosi_datagram_array[chip];
+    Datagram mosi_datagram_n = mosi_datagram_array[chip_n];
     for (int byte_n=(DATAGRAM_SIZE - 1); byte_n>=0; --byte_n)
     {
       uint8_t byte_write = (mosi_datagram_n.bytes >> (8*byte_n)) & 0xff;
@@ -533,12 +533,12 @@ AD57X4R::Datagram AD57X4R::readMisoDatagramFromChip(int chip)
   spiBeginTransaction();
   for (int chip_n=(chip_count_ - 1); chip_n>=0; --chip_n)
   {
-    miso_datagram_array[chip].bytes = 0;
+    miso_datagram_array[chip_n].bytes = 0;
     for (int byte_n=(DATAGRAM_SIZE - 1); byte_n>=0; --byte_n)
     {
-      uint8_t byte_write = (mosi_datagram_array[chip].bytes >> (8*byte_n)) & 0xff;
+      uint8_t byte_write = (mosi_datagram_array[chip_n].bytes >> (8*byte_n)) & 0xff;
       uint8_t byte_read = SPI.transfer(byte_write);
-      miso_datagram_array[chip].bytes |= ((uint32_t)byte_read) << (8*byte_n);
+      miso_datagram_array[chip_n].bytes |= ((uint32_t)byte_read) << (8*byte_n);
     }
   }
   spiEndTransaction();
